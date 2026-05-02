@@ -1,9 +1,7 @@
 from fastapi import FastAPI
 
+app = FastAPI()
 
-app = FastAPI(title="RIA LLM API")
-
-
-@app.get("/health")
-def health_check() -> dict[str, str]:
-    return {"status": "ok"}
+@app.get("/")
+async def root():
+    return {"message": "Hello World"}
