@@ -1,7 +1,11 @@
 from fastapi import FastAPI
 
-app = FastAPI(description="nomothetisAI REST API")
+from app.api.health import router as health_router
 
-@app.get("/")
-async def root():
-    return {"message": "Hello World"}
+
+def create_app() -> FastAPI:
+    app = FastAPI(description="nomothetisAI REST API")
+    app.include_router(health_router)
+    return app
+
+app = create_app()
