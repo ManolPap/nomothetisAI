@@ -6,11 +6,15 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "fastapi[standard]>=0.136.1",
+    "langchain-core>=0.3.0",
+    "langchain-google-genai>=2.0.0",
     "openai>=2.33.0",
     "pydantic>=2.13.3",
+    "pymupdf>=1.24.0",
     "pypdf>=6.10.2",
     "python-dotenv>=1.2.2",
     "python-multipart>=0.0.27",
+    "tavily-python>=0.5.0",
     "uvicorn>=0.46.0",
 ]
 
