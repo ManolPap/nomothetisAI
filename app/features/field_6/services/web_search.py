@@ -4,7 +4,7 @@ import re
 import unicodedata
 
 import requests  # type: ignore[import-untyped]
-from langchain_core.messages import HumanMessage, SystemMessage  # type: ignore[import-not-found]
+from langchain_core.messages import HumanMessage, SystemMessage
 
 from app.features.field_6.config import (
     EUROSTAT_CATALOG,

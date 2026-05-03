@@ -4,8 +4,8 @@
 import os
 
 from dotenv import load_dotenv
-from langchain_google_genai import ChatGoogleGenerativeAI  # type: ignore[import-not-found]
-from tavily import TavilyClient  # type: ignore[import-not-found]
+from langchain_google_genai import ChatGoogleGenerativeAI
+from tavily import TavilyClient  # type: ignore[import-untyped]
 
 load_dotenv()
 

@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from langchain_core.messages import HumanMessage, SystemMessage  # type: ignore[import-not-found]
+from langchain_core.messages import HumanMessage, SystemMessage
 
 from app.features.field_6.config import llm_fast, llm_synthesis
 from app.features.field_6.prompt import (
