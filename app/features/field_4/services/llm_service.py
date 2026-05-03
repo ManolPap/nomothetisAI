@@ -27,6 +27,7 @@ def build_global_bill_input(articles: list[dict]) -> str:
 
 
 def analyze_bill_field_4(articles: list[dict]) -> str:
+    client = OpenAI()
     bill_input = build_global_bill_input(articles)
 
     response = client.responses.create(
