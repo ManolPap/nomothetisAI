@@ -4,7 +4,7 @@ from typing import Any
 
 from langchain_core.messages import HumanMessage, SystemMessage
 
-from app.features.field_6.config import llm_fast, llm_synthesis
+from app.features.field_6.config import get_llm_fast, get_llm_synthesis
 from app.features.field_6.prompt import (
     FACTS_HUMAN_TEMPLATE,
     FACTS_SYSTEM,
@@ -64,7 +64,7 @@ def step1_extract_metadata(law_structured: str) -> dict:
     print("ΒΗΜΑ 1: Εξαγωγή μεταδεδομένων νόμου (Gemini Flash Lite)")
     print("=" * 60)
 
-    response = llm_fast.invoke([
+    response = get_llm_fast().invoke([
         SystemMessage(content=METADATA_SYSTEM),
         HumanMessage(content=METADATA_HUMAN_TEMPLATE.format(
             law_structured=law_structured,
@@ -107,7 +107,7 @@ def step3_generate_queries(metadata: dict) -> list[str]:
         else "Ο νόμος δεν ενσωματώνει συγκεκριμένη Οδηγία ΕΕ."
     )
 
-    response = llm_fast.invoke([
+    response = get_llm_fast().invoke([
         SystemMessage(content=QUERIES_SYSTEM),
         HumanMessage(content=QUERIES_HUMAN_TEMPLATE.format(
             topic=metadata["topic"],
@@ -185,7 +185,7 @@ def step5_extract_facts(
             "Αυτά τα δεδομένα αφορούν ΑΠΟΚΛΕΙΣΤΙΚΑ το υποπεδίο i) (Χώρες ΕΕ/ΟΟΣΑ).\n"
         )
 
-    response = llm_fast.invoke([
+    response = get_llm_fast().invoke([
         SystemMessage(content=FACTS_SYSTEM),
         HumanMessage(content=FACTS_HUMAN_TEMPLATE.format(
             topic=metadata["topic"],
@@ -222,7 +222,7 @@ def step6_synthesize_field6(
     print("ΒΗΜΑ 6: Σύνθεση Πεδίου 6 (Gemini 2.5 Flash)")
     print("=" * 60)
 
-    response = llm_synthesis.invoke([
+    response = get_llm_synthesis().invoke([
         SystemMessage(content=SYNTHESIS_SYSTEM),
         HumanMessage(content=build_synthesis_human(
             topic=metadata["topic"],

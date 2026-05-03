@@ -9,8 +9,8 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from app.features.field_6.config import (
     EUROSTAT_CATALOG,
     TRUSTED_DOMAINS,
-    llm_fast,
-    tavily,
+    get_llm_fast,
+    get_tavily,
 )
 from app.features.field_6.prompt import (
     EUROSTAT_DATASET_HUMAN_TEMPLATE,
@@ -211,7 +211,7 @@ def step4_web_search(queries: list[str]) -> list[dict]:
     for i, query in enumerate(queries, 1):
         print(f"[{i}] Ψάχνω: {query}")
         try:
-            response = tavily.search(
+            response = get_tavily().search(
                 query=query,
                 max_results=3,
                 search_depth="advanced",
@@ -221,7 +221,7 @@ def step4_web_search(queries: list[str]) -> list[dict]:
 
             if not results:
                 print("  → 0 αποτελέσματα με domain filter, δοκιμάζω χωρίς...")
-                response = tavily.search(
+                response = get_tavily().search(
                     query=query,
                     max_results=3,
                     search_depth="advanced",
@@ -311,7 +311,7 @@ def select_eurostat_dataset_with_llm(metadata: dict) -> tuple | None:
         for i, (did, info) in enumerate(EUROSTAT_CATALOG.items())
     ])
 
-    response = llm_fast.invoke([
+    response = get_llm_fast().invoke([
         SystemMessage(content=EUROSTAT_DATASET_SYSTEM),
         HumanMessage(content=EUROSTAT_DATASET_HUMAN_TEMPLATE.format(
             topic=topic,

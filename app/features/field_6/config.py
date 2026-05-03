@@ -2,6 +2,7 @@
 """Σταθερές, datasets και αρχικοποίηση clients για το Πεδίο 6."""
 
 import os
+from functools import lru_cache
 
 from dotenv import load_dotenv
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -10,24 +11,32 @@ from tavily import TavilyClient  # type: ignore[import-untyped]
 load_dotenv()
 
 # -------------------------------------------------------
-# LLM clients
+# LLM clients — lazy initialization
 # -------------------------------------------------------
 
-# Gemini Flash Lite: extraction, queries, facts (500 RPD)
-llm_fast = ChatGoogleGenerativeAI(
-    model="gemini-3.1-flash-lite-preview",
-    google_api_key=os.getenv("GOOGLE_API_KEY"),
-    temperature=0,
-)
+@lru_cache(maxsize=1)
+def get_llm_fast() -> ChatGoogleGenerativeAI:
+    """Gemini Flash Lite: extraction, queries, facts (500 RPD)."""
+    return ChatGoogleGenerativeAI(
+        model="gemini-3.1-flash-lite-preview",
+        google_api_key=os.getenv("GOOGLE_API_KEY"),
+        temperature=0,
+    )
 
-# Gemini 2.5 Flash: σύνθεση (20 RPD free tier)
-llm_synthesis = ChatGoogleGenerativeAI(
-    model="gemini-2.5-flash",
-    google_api_key=os.getenv("GOOGLE_API_KEY"),
-    temperature=0.2,
-)
 
-tavily = TavilyClient(api_key=os.getenv("TAVILY_API_KEY"))
+@lru_cache(maxsize=1)
+def get_llm_synthesis() -> ChatGoogleGenerativeAI:
+    """Gemini 2.5 Flash: σύνθεση (20 RPD free tier)."""
+    return ChatGoogleGenerativeAI(
+        model="gemini-2.5-flash",
+        google_api_key=os.getenv("GOOGLE_API_KEY"),
+        temperature=0.2,
+    )
+
+
+@lru_cache(maxsize=1)
+def get_tavily() -> TavilyClient:
+    return TavilyClient(api_key=os.getenv("TAVILY_API_KEY"))
 
 # -------------------------------------------------------
 # Trusted domains — ελαστικό filtering, όχι αυστηρό
