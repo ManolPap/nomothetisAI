@@ -2,19 +2,20 @@
 
 import os
 import tempfile
+from typing import Annotated
 
-from fastapi import APIRouter, HTTPException, UploadFile, File
+from fastapi import APIRouter, File, HTTPException, UploadFile
 
 from app.features.field_6.schemas import Field6Response, LawMetadata, WebSource
-from app.features.field_6.services.pdf_reader import (
-    extract_articles_from_law,
-    extract_text_from_pdf,
-)
 from app.features.field_6.services.llm_service import (
     step1_extract_metadata,
     step3_generate_queries,
     step5_extract_facts,
     step6_synthesize_field6,
+)
+from app.features.field_6.services.pdf_reader import (
+    extract_articles_from_law,
+    extract_text_from_pdf,
 )
 from app.features.field_6.services.web_search import (
     eurostat_dict_to_text,
@@ -36,7 +37,7 @@ router = APIRouter(prefix="/field6", tags=["field6"])
     ),
 )
 async def analyze_field6(
-    file: UploadFile = File(..., description="PDF αρχείο του νόμου"),
+    file: Annotated[UploadFile, File(description="PDF αρχείο του νόμου")],
 ) -> Field6Response:
     if not file.filename or not file.filename.lower().endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Το αρχείο πρέπει να είναι PDF.")

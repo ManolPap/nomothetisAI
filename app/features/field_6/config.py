@@ -1,3 +1,4 @@
+# ruff: noqa: E501
 """Σταθερές, datasets και αρχικοποίηση clients για το Πεδίο 6."""
 
 import os

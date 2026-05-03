@@ -14,7 +14,6 @@ from app.features.field_6.prompt import (
     build_synthesis_human,
 )
 
-
 # -------------------------------------------------------
 # Helpers
 # -------------------------------------------------------
@@ -132,7 +131,7 @@ def step3_generate_queries(metadata: dict) -> list[str]:
     ]
 
     print("Queries:")
-    for i, (q, label) in enumerate(zip(queries, labels), 1):
+    for i, (q, label) in enumerate(zip(queries, labels, strict=False), 1):
         print(f"  [{i}] {label}: {q}")
 
     return queries

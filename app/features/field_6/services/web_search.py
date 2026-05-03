@@ -7,7 +7,6 @@ import requests
 from langchain_core.messages import HumanMessage, SystemMessage
 
 from app.features.field_6.config import (
-    EU_OECD_COUNTRIES,
     EUROSTAT_CATALOG,
     TRUSTED_DOMAINS,
     llm_fast,
@@ -18,7 +17,6 @@ from app.features.field_6.prompt import (
     EUROSTAT_DATASET_SYSTEM,
 )
 from app.features.field_6.services.llm_service import extract_llm_content
-
 
 # -------------------------------------------------------
 # Helpers

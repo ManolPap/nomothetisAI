@@ -1,3 +1,4 @@
+# ruff: noqa: E501
 """Prompt templates για τα βήματα του Πεδίου 6."""
 
 from app.features.field_6.config import FEW_SHOT_EXAMPLES
