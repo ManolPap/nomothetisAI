@@ -3,8 +3,8 @@
 import re
 import unicodedata
 
-import requests
-from langchain_core.messages import HumanMessage, SystemMessage
+import requests  # type: ignore[import-untyped]
+from langchain_core.messages import HumanMessage, SystemMessage  # type: ignore[import-not-found]
 
 from app.features.field_6.config import (
     EUROSTAT_CATALOG,

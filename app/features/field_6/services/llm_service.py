@@ -1,5 +1,7 @@
 """LLM-based βήματα για το Πεδίο 6 (step1, step3, step5, step6)."""
 
+from typing import Any
+
 from langchain_core.messages import HumanMessage, SystemMessage
 
 from app.features.field_6.config import llm_fast, llm_synthesis
@@ -18,7 +20,7 @@ from app.features.field_6.prompt import (
 # Helpers
 # -------------------------------------------------------
 
-def extract_llm_content(response) -> str:
+def extract_llm_content(response: Any) -> str:
     """Εξάγει κείμενο από LLM response."""
     content = response.content
     if isinstance(content, str):
