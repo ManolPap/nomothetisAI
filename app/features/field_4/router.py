@@ -37,7 +37,7 @@ router = APIRouter()
 
 
 @router.post("/analyze")
-async def analyze_field_4(file: Annotated[UploadFile, File(...)]):
+async def analyze_field_4(file: Annotated[UploadFile, File(...)])-> dict[str,object]:
     try:
         filename = file.filename or "uploaded.pdf"
         suffix = Path(filename).suffix or ".pdf"
