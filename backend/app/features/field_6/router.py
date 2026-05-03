@@ -28,7 +28,6 @@ from app.features.field_6.services.pdf_reader import (
     extract_text_from_pdf,
 )
 from app.features.field_6.services.web_search import (
-    eurostat_dict_to_text,
     step2_eurlex_nim,
     step4_web_search,
     step5b_eurostat_for_countries,
