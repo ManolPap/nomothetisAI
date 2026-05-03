@@ -1,6 +1,5 @@
 import re
 
-
 ARTICLE_RE = re.compile(
     r"(?m)^\s*Άρθρο\s+(\d+[Α-ΩA-Z]?)\s*$",
     re.IGNORECASE,

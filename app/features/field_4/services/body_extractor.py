@@ -2,7 +2,6 @@ import re
 
 from app.features.field_4.services.pdf_reader import read_pdf_text
 
-
 START_SECTION_RE = re.compile(
     r"(?m)^\s*(ΜΕΡΟΣ\s+Α[΄'’]?|ΚΕΦΑΛΑΙΟ\s+Α[΄'’]?)\s*$",
     re.IGNORECASE,
