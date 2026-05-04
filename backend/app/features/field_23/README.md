@@ -37,7 +37,7 @@ Use those to inspect exact request/response models and try calls (PDF upload is 
 1. **Upload law PDF(s)** → split into articles (`split-law`).
 2. **Compare** two article lists (e.g. initial vs final) → list of **diffs** with segments (`compare-laws`).
 3. **Show the diff** in the UI (old / new text, highlight changes from `segments`).
-4. **Optional detail slider** on the frontend: filter which diffs you show (e.g. by `token_change_fraction` or `change_type`) — that logic lives in the UI.
+4. **Detail slider** on the frontend: filter which diffs you show (e.g. by `token_change_fraction` or `change_type`) — that logic lives in the UI.
 5. **For one article pair** (as in the diff): call **`attribute-legislative-comments`** with `initial_article` / `final_article` → LLM judgements for comments loaded on the backend (JSON) that match `article_number`.
 
 ---
