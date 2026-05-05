@@ -43,7 +43,12 @@ def suggest_indicators(sector: str, law_title: str) -> list[IndicatorSuggestion]
         )),
     ])
 
-    raw = (response.content[0]["text"] if isinstance(response.content[0], dict) else response.content[0].text).strip() if isinstance(response.content, list) else response.content.strip()
+    content = response.content
+    if isinstance(content, list):
+        item = content[0]
+        raw = (item["text"] if isinstance(item, dict) else item.text).strip()
+    else:
+        raw = content.strip()
     print(f"  LLM πρότεινε: {raw}")
 
     suggestions = []

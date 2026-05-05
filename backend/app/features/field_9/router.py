@@ -2,26 +2,27 @@
 
 import os
 import tempfile
+from typing import Annotated
 
-from fastapi import APIRouter, HTTPException, UploadFile, File
+from fastapi import APIRouter, File, HTTPException, UploadFile
 from langchain_core.messages import HumanMessage, SystemMessage
 
 from app.features.field_9.config import get_llm
 from app.features.field_9.prompt import (
-    EXTRACT_SECTOR_SYSTEM,
     EXTRACT_SECTOR_HUMAN_TEMPLATE,
+    EXTRACT_SECTOR_SYSTEM,
 )
 from app.features.field_9.schemas import (
     ExtractSectorResponse,
-    SuggestIndicatorsRequest,
-    SuggestIndicatorsResponse,
     FetchDataRequest,
     FetchDataResponse,
+    SuggestIndicatorsRequest,
+    SuggestIndicatorsResponse,
 )
 from app.features.field_9.services.eurostat import (
-    suggest_indicators,
     fetch_indicator_data,
     get_five_year_range,
+    suggest_indicators,
 )
 from app.features.field_9.services.pdf_reader import extract_text_from_pdf
 
@@ -29,7 +30,7 @@ router = APIRouter(prefix="/field9", tags=["field9"])
 
 
 @router.post("/extract-sector", response_model=ExtractSectorResponse)
-async def extract_sector(file: UploadFile = File(...)):
+async def extract_sector(file: Annotated[UploadFile, File(description="PDF αρχείο του νόμου")]):
     """Διαβάζει PDF νόμου και εξάγει τομέα, έτος και τίτλο."""
     print("\n" + "=" * 60)
     print("ΠΕΔΙΟ 9 — Βήμα 1: Εξαγωγή τομέα και έτους")
@@ -51,7 +52,12 @@ async def extract_sector(file: UploadFile = File(...)):
             )),
         ])
 
-        raw = (response.content[0]["text"] if isinstance(response.content[0], dict) else response.content[0].text).strip() if isinstance(response.content, list) else response.content.strip()
+        content = response.content
+        if isinstance(content, list):
+            item = content[0]
+            raw = (item["text"] if isinstance(item, dict) else item.text).strip()
+        else:
+            raw = content.strip()
         print(f"  LLM απάντηση:\n{raw}")
 
         sector = ""
