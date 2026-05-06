@@ -11,7 +11,10 @@ import type {
 export function splitLaw(file: File, signal?: AbortSignal): Promise<SplitLawResponse> {
   const form = new FormData()
   form.append('law_pdf', file)
-  return postFormData<SplitLawResponse>(buildUrl('/api/field-23/split-law'), form, { signal })
+  return postFormData<SplitLawResponse>(buildUrl('/api/field-23/split-law'), form, {
+    signal,
+    timeoutMs: LONG_TIMEOUT_MS,
+  })
 }
 
 export function compareLaws(
