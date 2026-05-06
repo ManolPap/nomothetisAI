@@ -4,7 +4,7 @@ import { StepContainer } from '../../../shared/ui/StepContainer'
 import { ErrorBanner } from '../../../shared/ui/ErrorBanner'
 import { isApiError } from '../../../shared/api/errors'
 import { synthesizeField6 } from '../api'
-import { buildEurostatText, buildSelectedSources, countWords, parseFactsText } from '../utils'
+import { buildEurostatText, buildSelectedSources, parseFactsText } from '../utils'
 import type { Field6Action, Field6State } from '../state/reducer'
 
 interface Props {
@@ -50,7 +50,6 @@ export function Step4Synthesis({ state, dispatch }: Props) {
     }
   }
 
-  const wordCount = countWords(state.synthesisText)
   const isLoading = state.synthesisStatus === 'loading'
 
   return (
@@ -86,15 +85,6 @@ export function Step4Synthesis({ state, dispatch }: Props) {
       {state.synthesisStatus === 'ready' && (
         <div className="synthesis-result">
           <div className="synthesis-result__header">
-            <span
-              className={`word-count ${wordCount > 250 ? 'word-count--over' : ''}`}
-              aria-live="polite"
-            >
-              Λέξεις: {wordCount} / 250
-              {wordCount > 250 && (
-                <span role="alert"> — Υπέρβαση ορίου!</span>
-              )}
-            </span>
             <button type="button" className="btn btn-secondary btn-sm" onClick={runSynthesis}>
               Εκ νέου Σύνθεση
             </button>
