@@ -29,7 +29,7 @@ from app.features.field_9.services.llm_service import extract_llm_content
 from app.features.field_9.services.pdf_reader import extract_text_from_pdf
 
 logger = logging.getLogger(__name__)
-router = APIRouter(prefix="/field9", tags=["field9"])
+router = APIRouter()
 
 
 @router.post("/extract-sector", response_model=ExtractSectorResponse)
