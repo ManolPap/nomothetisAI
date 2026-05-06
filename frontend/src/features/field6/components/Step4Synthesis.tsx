@@ -84,11 +84,9 @@ export function Step4Synthesis({ state, dispatch }: Props) {
 
       {state.synthesisStatus === 'ready' && (
         <div className="synthesis-result">
-          <div className="synthesis-result__header">
-            <button type="button" className="btn btn-secondary btn-sm" onClick={runSynthesis}>
-              Εκ νέου Σύνθεση
-            </button>
-          </div>
+          <button type="button" className="btn btn-secondary btn-sm" onClick={runSynthesis}>
+            Εκ νέου Σύνθεση
+          </button>
           <textarea
             className="synthesis-textarea"
             value={state.synthesisText}
@@ -98,6 +96,23 @@ export function Step4Synthesis({ state, dispatch }: Props) {
           />
         </div>
       )}
+
+      <div className="field6-step4-complete">
+        {state.flowCompleted && (
+          <p className="field6-step4-complete__done" role="status">
+            Η ροή σημειώθηκε ως ολοκληρωμένη στην αρχική.
+          </p>
+        )}
+        {!state.flowCompleted && state.synthesisStatus === 'ready' && (
+          <button
+            type="button"
+            className="btn btn-field6-complete"
+            onClick={() => dispatch({ type: 'MARK_FLOW_COMPLETED' })}
+          >
+            Ολοκληρώθηκε
+          </button>
+        )}
+      </div>
     </StepContainer>
   )
 }

@@ -30,7 +30,7 @@ export function Step3Eurostat({ state, dispatch }: Props) {
   useEffect(() => { if (state.eurostatStatus === 'idle') loadEurostat() }, [])
 
   const entries = Object.entries(state.eurostatData)
-  const canContinue = state.eurostatStatus === 'ready' && state.selectedCountryCodes.size > 0
+  const canContinue = state.eurostatStatus === 'ready'
 
   return (
     <StepContainer

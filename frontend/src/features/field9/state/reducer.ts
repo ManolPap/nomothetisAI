@@ -32,6 +32,9 @@ export interface Field9State {
   fiveYearRange: number[]
   targetValues: Record<string, string>
   fetchError: string | null
+
+  /** User clicked «Ολοκληρώθηκε» στο βήμα 3 · εμφανίζεται στην αρχική. */
+  flowCompleted: boolean
 }
 
 export type Field9Action =
@@ -51,6 +54,8 @@ export type Field9Action =
   | { type: 'FETCH_ERROR'; error: string }
   | { type: 'SET_TARGET_VALUE'; datasetId: string; value: string }
   | { type: 'GO_TO_STEP'; step: 1 | 2 | 3 }
+  | { type: 'MARK_FLOW_COMPLETED' }
+  | { type: 'RESET_FIELD9_WORKFLOW' }
 
 export const initialField9State: Field9State = {
   currentStep: 1,
@@ -70,18 +75,21 @@ export const initialField9State: Field9State = {
   fiveYearRange: [],
   targetValues: {},
   fetchError: null,
+  flowCompleted: false,
 }
 
 function invalidateSuggestAndFetch(): Partial<Field9State> {
   return {
     suggestStatus: 'idle', suggestions: [], selectedDatasetIds: new Set(), suggestError: null,
     fetchStatus: 'idle', indicators: [], referenceYear: null, fiveYearRange: [], fetchError: null,
+    flowCompleted: false,
   }
 }
 
 function invalidateFetch(): Partial<Field9State> {
   return {
     fetchStatus: 'idle', indicators: [], referenceYear: null, fiveYearRange: [], fetchError: null,
+    flowCompleted: false,
   }
 }
 
@@ -91,6 +99,7 @@ export function field9Reducer(state: Field9State, action: Field9Action): Field9S
       return {
         ...state, file: action.file, currentStep: 1,
         extractStatus: 'idle', sector: '', year: null, lawTitle: '', extractError: null,
+        flowCompleted: false,
         ...invalidateSuggestAndFetch(),
       }
     case 'EXTRACT_LOADING':
@@ -148,6 +157,10 @@ export function field9Reducer(state: Field9State, action: Field9Action): Field9S
       return { ...state, targetValues: { ...state.targetValues, [action.datasetId]: action.value } }
     case 'GO_TO_STEP':
       return { ...state, currentStep: action.step }
+    case 'MARK_FLOW_COMPLETED':
+      return { ...state, flowCompleted: true }
+    case 'RESET_FIELD9_WORKFLOW':
+      return { ...initialField9State }
     default:
       return state
   }

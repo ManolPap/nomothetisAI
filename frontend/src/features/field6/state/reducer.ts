@@ -41,6 +41,9 @@ export interface Field6State {
   synthesisText: string
   wordCount: number
   synthesisError: string | null
+
+  /** User clicked «Ολοκληρώθηκε» στο βήμα 4 · εμφανίζεται στην αρχική. */
+  flowCompleted: boolean
 }
 
 export type Field6Action =
@@ -64,6 +67,8 @@ export type Field6Action =
   | { type: 'SYNTHESIS_ERROR'; error: string }
   | { type: 'SET_SYNTHESIS_TEXT'; text: string }
   | { type: 'GO_TO_STEP'; step: 1 | 2 | 3 | 4 }
+  | { type: 'MARK_FLOW_COMPLETED' }
+  | { type: 'RESET_FIELD6_WORKFLOW' }
 
 export const initialField6State: Field6State = {
   currentStep: 1,
@@ -88,6 +93,7 @@ export const initialField6State: Field6State = {
   synthesisText: '',
   wordCount: 0,
   synthesisError: null,
+  flowCompleted: false,
 }
 
 function invalidateFromStep2(): Partial<Field6State> {
@@ -97,6 +103,7 @@ function invalidateFromStep2(): Partial<Field6State> {
     eurostatStatus: 'idle', eurostatData: {}, indicatorName: '',
     selectedCountryCodes: new Set(), selectedYearsByCountry: {}, eurostatError: null,
     synthesisStatus: 'idle', synthesisText: '', wordCount: 0, synthesisError: null,
+    flowCompleted: false,
   }
 }
 
@@ -105,11 +112,12 @@ function invalidateFromStep3(): Partial<Field6State> {
     eurostatStatus: 'idle', eurostatData: {}, indicatorName: '',
     selectedCountryCodes: new Set(), selectedYearsByCountry: {}, eurostatError: null,
     synthesisStatus: 'idle', synthesisText: '', wordCount: 0, synthesisError: null,
+    flowCompleted: false,
   }
 }
 
 function invalidateSynthesis(): Partial<Field6State> {
-  return { synthesisStatus: 'idle', synthesisText: '', wordCount: 0, synthesisError: null }
+  return { synthesisStatus: 'idle', synthesisText: '', wordCount: 0, synthesisError: null, flowCompleted: false }
 }
 
 export function field6Reducer(state: Field6State, action: Field6Action): Field6State {
@@ -118,6 +126,7 @@ export function field6Reducer(state: Field6State, action: Field6Action): Field6S
       return {
         ...state, file: action.file, currentStep: 1,
         metadataStatus: 'idle', metadata: null, nimText: '', metadataError: null,
+        flowCompleted: false,
         ...invalidateFromStep2(),
       }
     case 'METADATA_LOADING':
@@ -211,6 +220,10 @@ export function field6Reducer(state: Field6State, action: Field6Action): Field6S
       return { ...state, synthesisText: action.text, wordCount: action.text.trim().split(/\s+/).filter(Boolean).length }
     case 'GO_TO_STEP':
       return { ...state, currentStep: action.step }
+    case 'MARK_FLOW_COMPLETED':
+      return { ...state, flowCompleted: true }
+    case 'RESET_FIELD6_WORKFLOW':
+      return { ...initialField6State }
     default:
       return state
   }

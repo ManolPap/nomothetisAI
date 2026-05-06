@@ -1139,3 +1139,82 @@ a {
   white-space: pre-wrap;
   word-break: break-word;
 }
+
+.no-data-warning {
+  color: #c0392b;
+  font-size: 0.78rem;
+}
+
+/* ── Field 6 completion ── */
+.btn-field6-complete {
+  background: #0b6a45;
+  color: #fff;
+  border-color: #08603d;
+}
+.btn-field6-complete:hover:not(:disabled) {
+  background: #095236;
+}
+.btn-field6-home-done {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #15803d;
+  color: #fff;
+  border-color: #116532;
+}
+.btn-field6-home-done:hover:not(:disabled) {
+  background: #0f6a32;
+}
+.workflow-card--field6 .workflow-card__reset {
+  display: block;
+  width: 100%;
+  margin-top: 0.5rem;
+  text-align: center;
+}
+.field6-step4-complete {
+  margin-top: 1rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--border);
+}
+.field6-step4-complete__done {
+  margin: 0 0 0.65rem;
+  color: #0b6a45;
+  font-weight: 600;
+}
+
+/* ── Field 9 completion ── */
+.btn-field9-complete {
+  background: #0b6a45;
+  color: #fff;
+  border-color: #08603d;
+}
+.btn-field9-complete:hover:not(:disabled) {
+  background: #095236;
+}
+.btn-field9-home-done {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #15803d;
+  color: #fff;
+  border-color: #116532;
+}
+.btn-field9-home-done:hover:not(:disabled) {
+  background: #0f6a32;
+}
+.workflow-card--field9 .workflow-card__reset {
+  display: block;
+  width: 100%;
+  margin-top: 0.5rem;
+  text-align: center;
+}
+.field9-step3-complete {
+  margin-top: 1rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--border);
+}
+.field9-step3-complete__done {
+  margin: 0 0 0.65rem;
+  color: #0b6a45;
+  font-weight: 600;
+}

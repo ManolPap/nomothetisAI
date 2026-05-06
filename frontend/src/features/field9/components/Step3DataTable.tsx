@@ -133,6 +133,23 @@ export function Step3DataTable({ state, dispatch }: Props) {
           </div>
         )
       })()}
+
+      <div className="field9-step3-complete">
+        {state.flowCompleted && (
+          <p className="field9-step3-complete__done" role="status">
+            Η ροή σημειώθηκε ως ολοκληρωμένη στην αρχική.
+          </p>
+        )}
+        {!state.flowCompleted && state.fetchStatus === 'ready' && (
+          <button
+            type="button"
+            className="btn btn-field9-complete"
+            onClick={() => dispatch({ type: 'MARK_FLOW_COMPLETED' })}
+          >
+            Ολοκληρώθηκε
+          </button>
+        )}
+      </div>
     </StepContainer>
   )
 }
