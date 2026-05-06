@@ -377,6 +377,7 @@ a {
 }
 
 .form-field__input,
+.form-field__textarea,
 .filter-input,
 .target-input,
 .synthesis-textarea {
@@ -388,7 +389,14 @@ a {
   background: #fff;
 }
 
+.form-field__textarea {
+  font-family: inherit;
+  resize: vertical;
+  line-height: 1.5;
+}
+
 .form-field__input:focus,
+.form-field__textarea:focus,
 .filter-input:focus,
 .target-input:focus,
 .synthesis-textarea:focus {
