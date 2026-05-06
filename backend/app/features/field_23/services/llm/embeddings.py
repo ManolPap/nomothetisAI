@@ -72,7 +72,7 @@ class CachedEmbeddings:
         )
 
     def _cache_get_vector(self, text: str, *, kind: str) -> tuple[list[float], str] | None:
-        """Return (vector, model) for the first cache hit across configured models (primary first)."""
+        """Return (vector, model) from first cache hit across models; primary first."""
         for model in self._models:
             key = self._cache_key(text, kind=kind, model=model)
             cached = LLM_CACHE.get(key)
@@ -111,7 +111,8 @@ class CachedEmbeddings:
             try:
                 est_tokens = self._estimate_batch_tokens(texts)
                 logger.warning(
-                    "field_23.llm.embeddings.request model=%s kind=documents attempt=%s/%s batch_size=%s estimated_tokens=%s",
+                    "field_23.llm.embeddings.request model=%s kind=documents "
+                    "attempt=%s/%s batch_size=%s estimated_tokens=%s",
                     model,
                     attempt,
                     self._retry_attempts,
@@ -215,7 +216,8 @@ class CachedEmbeddings:
         hit_models = {m for _, _, m in pending_hits}
         if len(hit_models) > 1:
             logger.warning(
-                "field_23.llm.embeddings.cache model_mismatch namespace=%s models=%s — refetching all",
+                "field_23.llm.embeddings.cache model_mismatch namespace=%s "
+                "models=%s — refetching all",
                 self._namespace,
                 sorted(hit_models),
             )

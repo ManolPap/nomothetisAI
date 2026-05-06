@@ -164,7 +164,8 @@ async def _attribute_single_item(
 
     async with _SEM:
         logger.warning(
-            "field_23.llm.comments.request model=%s item_index=%s comments_count=%s estimated_tokens=%s",
+            "field_23.llm.comments.request model=%s item_index=%s "
+            "comments_count=%s estimated_tokens=%s",
             model_name,
             item.item_index,
             len(comments),
