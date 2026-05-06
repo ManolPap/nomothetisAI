@@ -98,10 +98,10 @@ export function Step1Sector({ state, dispatch }: Props) {
           </label>
           <label className="form-field">
             <span className="form-field__label">Τίτλος Νόμου</span>
-            <input
+            <textarea
               className="form-field__input"
-              type="text"
               value={state.lawTitle}
+              rows={3}
               onChange={(e) => dispatch({ type: 'UPDATE_LAW_TITLE', title: e.target.value })}
             />
           </label>
