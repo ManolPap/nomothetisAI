@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import time
 from collections.abc import Callable
 
@@ -8,6 +9,8 @@ from pydantic import SecretStr
 
 from app.core.config import settings
 from app.features.field_23.services.llm.disk_cache import LLM_CACHE, hash_text
+
+logger = logging.getLogger(__name__)
 
 
 class CachedEmbeddings:
@@ -21,10 +24,10 @@ class CachedEmbeddings:
         api_key: str | None = None,
         namespace: str = "default",
         preprocess: Callable[[str], str] | None = None,
-        max_batch_size: int = 32,
+        max_batch_size: int = 40,
         retry_attempts: int = 4,
     ) -> None:
-        self._models: list[str] = [model] + list(fallback_models or ["models/embedding-001"])
+        self._models: list[str] = [model] + list(fallback_models or ["models/gemini-embedding-001"])
         self._models = list(dict.fromkeys(self._models))
         self._active_model = self._models[0]
         self._api_key = (
@@ -68,6 +71,15 @@ class CachedEmbeddings:
             f"{hash_text(text)}"
         )
 
+    def _cache_get_vector(self, text: str, *, kind: str) -> tuple[list[float], str] | None:
+        """Return (vector, model) for the first cache hit across configured models (primary first)."""
+        for model in self._models:
+            key = self._cache_key(text, kind=kind, model=model)
+            cached = LLM_CACHE.get(key)
+            if cached is not None:
+                return cached, model
+        return None
+
     @staticmethod
     def _is_rate_limited(exc: BaseException) -> bool:
         msg = str(exc).lower()
@@ -82,21 +94,82 @@ class CachedEmbeddings:
     def _chunks(items: list[str], size: int) -> list[list[str]]:
         return [items[i : i + size] for i in range(0, len(items), size)]
 
+    @staticmethod
+    def _estimate_tokens(text: str) -> int:
+        # Rough heuristic for Gemini-family prompts when tokenizer is unavailable.
+        return max(1, len(text) // 4)
+
+    @classmethod
+    def _estimate_batch_tokens(cls, texts: list[str]) -> int:
+        return sum(cls._estimate_tokens(text) for text in texts)
+
     def _embed_documents_with_retry(
         self, texts: list[str], *, model: str
     ) -> list[list[float]]:
         last_exc: BaseException | None = None
         for attempt in range(1, self._retry_attempts + 1):
             try:
+                est_tokens = self._estimate_batch_tokens(texts)
+                logger.warning(
+                    "field_23.llm.embeddings.request model=%s kind=documents attempt=%s/%s batch_size=%s estimated_tokens=%s",
+                    model,
+                    attempt,
+                    self._retry_attempts,
+                    len(texts),
+                    est_tokens,
+                )
                 return self._get_client(model).embed_documents(texts)
             except Exception as exc:
                 last_exc = exc
                 if not self._is_rate_limited(exc) or attempt >= self._retry_attempts:
                     raise
+                logger.warning(
+                    "field_23.llm.embeddings.retry model=%s attempt=%s/%s reason=%s",
+                    model,
+                    attempt,
+                    self._retry_attempts,
+                    str(exc),
+                )
                 time.sleep(float(2 ** (attempt - 1)))
 
         assert last_exc is not None
         raise last_exc
+
+    def _embed_documents_with_sub_batches(
+        self, texts: list[str], *, model: str, remaining_calls: list[int]
+    ) -> list[list[float]]:
+        if remaining_calls[0] <= 0:
+            raise ValueError(
+                "Embedding call budget exceeded while splitting sub-batches (max 10 calls)."
+            )
+        remaining_calls[0] -= 1
+        vectors = self._embed_documents_with_retry(texts, model=model)
+        if len(vectors) == len(texts):
+            return vectors
+        if len(texts) == 1:
+            raise ValueError(
+                f"Embedding API returned {len(vectors)} vectors for 1 text using model '{model}'."
+            )
+        mid = max(1, len(texts) // 2)
+        left = self._embed_documents_with_sub_batches(
+            texts[:mid], model=model, remaining_calls=remaining_calls
+        )
+        right = self._embed_documents_with_sub_batches(
+            texts[mid:], model=model, remaining_calls=remaining_calls
+        )
+        return left + right
+
+    def _align_vectors_count(
+        self, texts: list[str], vectors: list[list[float]], *, model: str
+    ) -> list[list[float]]:
+        if len(vectors) == len(texts):
+            return vectors
+        if not vectors:
+            raise ValueError(f"Embedding API returned no vectors for model '{model}'.")
+        # Keep batching behavior only: retry via recursive sub-batches with a hard call cap.
+        return self._embed_documents_with_sub_batches(
+            texts, model=model, remaining_calls=[10]
+        )
 
     def _embed_documents_with_fallback(
         self, texts: list[str]
@@ -108,6 +181,7 @@ class CachedEmbeddings:
         for idx, model in enumerate(candidate_models):
             try:
                 vectors = self._embed_documents_with_retry(texts, model=model)
+                vectors = self._align_vectors_count(texts, vectors, model=model)
                 if model != self._active_model:
                     self._active_model = model
                     self.stats["model_fallbacks"] += 1
@@ -125,52 +199,75 @@ class CachedEmbeddings:
         if not texts:
             return []
 
-        initial_model = self._active_model
         prepared = [self._prepare(text) for text in texts]
-        results: list[list[float] | None] = [None] * len(prepared)
-        missing_indices: list[int] = []
-        unique_missing_texts: dict[str, list[int]] = {}
+        n = len(prepared)
+        results: list[list[float] | None] = [None] * n
+        pending_hits: list[tuple[int, list[float], str]] = []
 
         for idx, text in enumerate(prepared):
-            key = self._cache_key(text, kind="doc")
-            cached = LLM_CACHE.get(key)
-            if cached is not None:
-                self.stats["cache_hits"] += 1
-                results[idx] = cached
+            got = self._cache_get_vector(text, kind="doc")
+            if got is not None:
+                vector, model = got
+                pending_hits.append((idx, vector, model))
             else:
                 self.stats["cache_misses"] += 1
-                missing_indices.append(idx)
-                unique_missing_texts.setdefault(text, []).append(idx)
 
-        if missing_indices:
-            unique_texts = list(unique_missing_texts.keys())
-            unique_vectors: dict[str, list[float]] = {}
-            for batch in self._chunks(unique_texts, self._max_batch_size):
-                embedded_batch, used_model = self._embed_documents_with_fallback(batch)
-                if used_model != initial_model:
-                    return self.embed_documents(texts)
-                for text, vector in zip(batch, embedded_batch, strict=True):
-                    unique_vectors[text] = vector
-                    LLM_CACHE[self._cache_key(text, kind="doc")] = vector
+        hit_models = {m for _, _, m in pending_hits}
+        if len(hit_models) > 1:
+            logger.warning(
+                "field_23.llm.embeddings.cache model_mismatch namespace=%s models=%s — refetching all",
+                self._namespace,
+                sorted(hit_models),
+            )
+            for _idx, _vector, _model in pending_hits:
+                self.stats["cache_misses"] += 1
+        else:
+            for idx, vector, _model in pending_hits:
+                self.stats["cache_hits"] += 1
+                results[idx] = vector
+            if hit_models:
+                self._active_model = next(iter(hit_models))
 
-            for text, indices in unique_missing_texts.items():
-                vector = unique_vectors[text]
-                for idx in indices:
-                    results[idx] = vector
+        missing_indices = [i for i in range(n) if results[i] is None]
+        if not missing_indices:
+            return [vector if vector is not None else [] for vector in results]
+
+        unique_missing_texts: dict[str, list[int]] = {}
+        for idx in missing_indices:
+            text = prepared[idx]
+            unique_missing_texts.setdefault(text, []).append(idx)
+
+        unique_texts = list(unique_missing_texts.keys())
+        unique_vectors: dict[str, list[float]] = {}
+        for batch in self._chunks(unique_texts, self._max_batch_size):
+            embedded_batch, used_model = self._embed_documents_with_fallback(batch)
+            for text, vector in zip(batch, embedded_batch, strict=True):
+                unique_vectors[text] = vector
+                LLM_CACHE[self._cache_key(text, kind="doc", model=used_model)] = vector
+
+        for text, indices in unique_missing_texts.items():
+            vector = unique_vectors[text]
+            for idx in indices:
+                results[idx] = vector
 
         return [vector if vector is not None else [] for vector in results]
 
     def embed_query(self, text: str) -> list[float]:
         prepared = self._prepare(text)
-        key = self._cache_key(prepared, kind="query")
-        cached = LLM_CACHE.get(key)
-        if cached is not None:
+        got = self._cache_get_vector(prepared, kind="query")
+        if got is not None:
             self.stats["cache_hits"] += 1
-            return cached
+            vector, model = got
+            self._active_model = model
+            return vector
 
         self.stats["cache_misses"] += 1
-        vectors, _ = self._embed_documents_with_fallback([prepared])
+        logger.warning(
+            "field_23.llm.embeddings.request model=%s kind=query batch_size=1 estimated_tokens=%s",
+            self._active_model,
+            self._estimate_tokens(prepared),
+        )
+        vectors, used_model = self._embed_documents_with_fallback([prepared])
         vector = vectors[0]
-        key = self._cache_key(prepared, kind="query")
-        LLM_CACHE[key] = vector
+        LLM_CACHE[self._cache_key(prepared, kind="query", model=used_model)] = vector
         return vector

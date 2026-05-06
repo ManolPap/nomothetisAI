@@ -122,6 +122,9 @@ a {
 .feature-page__title {
   margin: 0;
   font-size: clamp(1.2rem, 2vw, 1.55rem);
+  /* Overrides index.css `h1 { color: var(--text-h) }`, which follows OS dark scheme while this app chrome stays light. */
+  color: var(--text);
+  font-weight: 700;
 }
 
 .step-container {
@@ -172,6 +175,8 @@ a {
 .step-title {
   margin: 0;
   font-size: 1.1rem;
+  color: var(--text);
+  font-weight: 700;
 }
 
 .step-progress {
@@ -244,6 +249,48 @@ a {
 .btn-ghost:hover:not(:disabled) {
   background: #eef3fc;
   color: var(--text);
+}
+
+.btn-field23-complete {
+  background: #0b6a45;
+  color: #fff;
+  border-color: #08603d;
+}
+
+.btn-field23-complete:hover:not(:disabled) {
+  background: #095236;
+}
+
+.btn-field23-home-done {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #15803d;
+  color: #fff;
+  border-color: #116532;
+}
+
+.btn-field23-home-done:hover:not(:disabled) {
+  background: #0f6a32;
+}
+
+.workflow-card--field23 .workflow-card__reset {
+  display: block;
+  width: 100%;
+  margin-top: 0.5rem;
+  text-align: center;
+}
+
+.field23-step4-complete {
+  margin-top: 1rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--border);
+}
+
+.field23-step4-complete__done {
+  margin: 0 0 0.65rem;
+  color: #0b6a45;
+  font-weight: 600;
 }
 
 .btn-sm {
@@ -638,6 +685,38 @@ a {
   margin-bottom: 0.7rem;
 }
 
+.compare-panel {
+  border: 1px solid var(--border);
+  background: #fff;
+  border-radius: 12px;
+  padding: 0.75rem 0.85rem;
+  margin-bottom: 0.8rem;
+}
+
+.compare-panel--controls .compare-controls,
+.compare-panel--summary .change-type-summary,
+.compare-panel--filters .compare-filters {
+  margin-bottom: 0;
+}
+
+.compare-controls {
+  justify-content: space-between;
+}
+
+.compare-filters__label {
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.compare-filters__search {
+  min-width: 240px;
+  max-width: 360px;
+  margin-left: auto;
+}
+
 .change-badge,
 .likelihood-badge {
   display: inline-block;
@@ -705,6 +784,11 @@ a {
   font-size: 0.78rem;
 }
 
+.diff-row__title {
+  color: var(--text);
+  font-weight: 600;
+}
+
 .article-preview summary {
   cursor: pointer;
   color: var(--primary);
@@ -766,6 +850,42 @@ a {
   padding: 0.6rem;
   line-height: 1.7;
   font-size: 0.85rem;
+}
+
+.diff-segments--github {
+  background: var(--surface, #fff);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.8rem;
+  line-height: 1.55;
+  word-break: break-word;
+  white-space: pre-wrap;
+  max-height: min(70vh, 520px);
+  overflow: auto;
+}
+
+.diff-segments--github .seg {
+  display: inline;
+  padding: 0;
+  border-radius: 2px;
+}
+
+.diff-segments--github .seg--equal {
+  background: transparent;
+}
+
+.diff-segments--github .seg--delete {
+  background: #ffecef;
+  color: #9f2b2b;
+  text-decoration: none;
+}
+
+.diff-segments--github .seg--insert {
+  background: #dafbe1;
+  color: #09612a;
+  text-decoration: none;
 }
 
 .seg--delete {

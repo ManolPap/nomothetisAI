@@ -1,4 +1,4 @@
-import { postFormData, postJson, LONG_TIMEOUT_MS } from '../../../shared/api/client'
+import { postFormData, postJson, LONG_TIMEOUT_MS, VERY_LONG_TIMEOUT_MS } from '../../../shared/api/client'
 import { buildUrl } from '../../../shared/utils/buildUrl'
 import type {
   ArticleChangeCommentsItem,
@@ -21,7 +21,10 @@ export function compareLaws(
   payload: CompareLawsRequest,
   signal?: AbortSignal,
 ): Promise<CompareLawsResponse> {
-  return postJson<CompareLawsResponse>(buildUrl('/api/field-23/compare-laws'), payload, { signal })
+  return postJson<CompareLawsResponse>(buildUrl('/api/field-23/compare-laws'), payload, {
+    signal,
+    timeoutMs: VERY_LONG_TIMEOUT_MS,
+  })
 }
 
 export function attributeComments(

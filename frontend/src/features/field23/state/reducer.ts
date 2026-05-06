@@ -38,6 +38,9 @@ export interface Field23State {
   attributionStatus: StepStatus
   attributionResults: Record<number, ItemAttributionOut>
   attributionError: string | null
+
+  /** User clicked «Ολοκληρώθηκε» στο βήμα 4 · εμφανίζεται στην αρχική. */
+  flowCompleted: boolean
 }
 
 export type Field23Action =
@@ -61,6 +64,8 @@ export type Field23Action =
   | { type: 'ATTRIBUTION_SUCCESS'; results: ItemAttributionOut[] }
   | { type: 'ATTRIBUTION_ERROR'; error: string }
   | { type: 'GO_TO_STEP'; step: 1 | 2 | 3 | 4 }
+  | { type: 'MARK_FLOW_COMPLETED' }
+  | { type: 'RESET_FIELD23_WORKFLOW' }
 
 export const ALL_CHANGE_TYPES: ChangeType[] = ['added', 'removed', 'modified', 'unchanged']
 
@@ -85,6 +90,7 @@ export const initialField23State: Field23State = {
   attributionStatus: 'idle',
   attributionResults: {},
   attributionError: null,
+  flowCompleted: false,
 }
 
 function invalidateCompare(): Partial<Field23State> {
@@ -92,6 +98,7 @@ function invalidateCompare(): Partial<Field23State> {
     compareStatus: 'idle', diffs: [], compareError: null,
     selectedDiffIndex: null,
     attributionStatus: 'idle', attributionResults: {}, attributionError: null,
+    flowCompleted: false,
   }
 }
 
@@ -157,6 +164,10 @@ export function field23Reducer(state: Field23State, action: Field23Action): Fiel
       return { ...state, attributionStatus: 'error', attributionError: action.error }
     case 'GO_TO_STEP':
       return { ...state, currentStep: action.step }
+    case 'MARK_FLOW_COMPLETED':
+      return { ...state, flowCompleted: true }
+    case 'RESET_FIELD23_WORKFLOW':
+      return { ...initialField23State }
     default:
       return state
   }

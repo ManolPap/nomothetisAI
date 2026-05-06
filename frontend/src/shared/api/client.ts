@@ -3,6 +3,7 @@ import { logger } from '../utils/logger'
 
 const DEFAULT_TIMEOUT_MS = 10_000
 export const LONG_TIMEOUT_MS = 35_000
+export const VERY_LONG_TIMEOUT_MS = 300_000
 
 async function parseErrorDetail(res: Response): Promise<ApiErrorDetail> {
   try {

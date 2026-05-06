@@ -13,12 +13,14 @@ describe('field23Reducer', () => {
       initialArticles: mockArticles,
       compareStatus: 'ready' as const,
       diffs: [{} as ArticleDiffOut],
+      flowCompleted: true,
     }
     const next = field23Reducer(withData, { type: 'SET_INITIAL_FILE', file: mockFile })
     expect(next.splitInitialStatus).toBe('idle')
     expect(next.initialArticles).toHaveLength(0)
     expect(next.compareStatus).toBe('idle')
     expect(next.diffs).toHaveLength(0)
+    expect(next.flowCompleted).toBe(false)
   })
 
   it('resets compare and attribution when normalize changes', () => {
