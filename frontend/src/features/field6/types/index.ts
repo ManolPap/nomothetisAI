@@ -1,11 +1,9 @@
 export interface LawMetadata {
-  title: string
-  law_number?: string
-  year?: number
-  ministry?: string
-  fek_number?: string
-  fek_date?: string
-  subject?: string
+  topic: string
+  ministry: string
+  sector: string
+  measures: string
+  directive: string
 }
 
 export interface WebSource {

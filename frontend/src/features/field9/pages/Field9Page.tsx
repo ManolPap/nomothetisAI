@@ -10,7 +10,11 @@ export function Field9Page() {
 
   return (
     <ErrorBoundary fallbackTitle="Σφάλμα στο Πεδίο 9">
-      <div className="feature-page">
+      <div className="feature-page page-shell">
+        <header className="page-hero">
+          <p className="page-hero__eyebrow">Field 9 Workflow</p>
+          <p className="page-hero__subtitle">Επιλογή και επαλήθευση Eurostat δεικτών με human-in-the-loop.</p>
+        </header>
         <h1 className="feature-page__title">Πεδίο 9 — Δείκτες Eurostat</h1>
         {state.currentStep === 1 && <Step1Sector state={state} dispatch={dispatch} />}
         {state.currentStep === 2 && <Step2Indicators state={state} dispatch={dispatch} />}

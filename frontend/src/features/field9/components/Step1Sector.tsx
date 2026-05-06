@@ -1,9 +1,10 @@
-import { type Dispatch } from 'react'
+import { type Dispatch, useCallback, useEffect } from 'react'
 import { StepHeader } from '../../../shared/ui/StepHeader'
 import { StepContainer } from '../../../shared/ui/StepContainer'
 import { FileUploader } from '../../../shared/ui/FileUploader'
 import { ErrorBanner } from '../../../shared/ui/ErrorBanner'
 import { isApiError } from '../../../shared/api/errors'
+import { useLawFiles } from '../../../app/providers/LawFilesProvider'
 import { extractSector } from '../api'
 import type { Field9Action, Field9State } from '../state/reducer'
 
@@ -13,7 +14,10 @@ interface Props {
 }
 
 export function Step1Sector({ state, dispatch }: Props) {
-  async function handleFile(file: File) {
+  const { finalLawFile, setFinalLawFile } = useLawFiles()
+
+  const handleFile = useCallback(async (file: File) => {
+    setFinalLawFile(file)
     dispatch({ type: 'SET_FILE', file })
     dispatch({ type: 'EXTRACT_LOADING' })
     try {
@@ -23,12 +27,25 @@ export function Step1Sector({ state, dispatch }: Props) {
       const msg = isApiError(e) ? e.userMessage() : 'Άγνωστο σφάλμα'
       dispatch({ type: 'EXTRACT_ERROR', error: msg })
     }
-  }
+  }, [dispatch, setFinalLawFile])
 
   const yearValue = state.year?.toString() ?? ''
   const yearValid = state.year != null && state.year >= 1900 && state.year <= 2100
   const canContinue = state.extractStatus === 'ready' && !!state.sector && yearValid && !!state.lawTitle
   const isLoading = state.extractStatus === 'loading'
+
+  useEffect(() => {
+    if (!finalLawFile) return
+    if (!state.file || state.file.name !== finalLawFile.name || state.file.size !== finalLawFile.size || state.file.lastModified !== finalLawFile.lastModified) {
+      dispatch({ type: 'SET_FILE', file: finalLawFile })
+    }
+  }, [dispatch, finalLawFile, state.file])
+
+  useEffect(() => {
+    if (state.file && state.extractStatus === 'idle') {
+      void handleFile(state.file)
+    }
+  }, [handleFile, state.extractStatus, state.file])
 
   return (
     <StepContainer
@@ -81,10 +98,10 @@ export function Step1Sector({ state, dispatch }: Props) {
           </label>
           <label className="form-field">
             <span className="form-field__label">Τίτλος Νόμου</span>
-            <input
+            <textarea
               className="form-field__input"
-              type="text"
               value={state.lawTitle}
+              rows={3}
               onChange={(e) => dispatch({ type: 'UPDATE_LAW_TITLE', title: e.target.value })}
             />
           </label>
