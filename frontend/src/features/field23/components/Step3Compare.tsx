@@ -1,4 +1,4 @@
-import { type Dispatch, useEffect } from 'react'
+import { type Dispatch } from 'react'
 import { StepHeader } from '../../../shared/ui/StepHeader'
 import { StepContainer } from '../../../shared/ui/StepContainer'
 import { LoadingPanel } from '../../../shared/ui/LoadingPanel'
@@ -37,9 +37,6 @@ export function Step3Compare({ state, dispatch }: Props) {
     }
   }
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { if (state.compareStatus === 'idle') runCompare() }, [])
-
   const typeCounts = ALL_CHANGE_TYPES.reduce(
     (acc, ct) => ({ ...acc, [ct]: state.diffs.filter((d) => d.change_type === ct).length }),
     {} as Record<ChangeType, number>,
@@ -68,23 +65,25 @@ export function Step3Compare({ state, dispatch }: Props) {
     >
       <StepHeader title="Σύγκριση Νόμων" stepNumber={3} totalSteps={4} />
 
-      <div className="compare-controls">
-        <label className="checkbox-label">
-          <input
-            type="checkbox"
-            checked={state.normalizeBefore}
-            onChange={(e) => dispatch({ type: 'SET_NORMALIZE', value: e.target.checked })}
-          />
-          Κανονικοποίηση πριν τη σύγκριση
-        </label>
-        <button
-          type="button"
-          className="btn btn-primary btn-sm"
-          onClick={runCompare}
-          disabled={state.compareStatus === 'loading'}
-        >
-          Σύγκριση
-        </button>
+      <div className="compare-panel compare-panel--controls">
+        <div className="compare-controls">
+          <label className="checkbox-label">
+            <input
+              type="checkbox"
+              checked={state.normalizeBefore}
+              onChange={(e) => dispatch({ type: 'SET_NORMALIZE', value: e.target.checked })}
+            />
+            Κανονικοποίηση πριν τη σύγκριση
+          </label>
+          <button
+            type="button"
+            className="btn btn-primary btn-sm"
+            onClick={runCompare}
+            disabled={state.compareStatus === 'loading'}
+          >
+            Σύγκριση
+          </button>
+        </div>
       </div>
 
       {state.compareStatus === 'loading' && <LoadingPanel message="Σύγκριση άρθρων…" />}
@@ -93,35 +92,39 @@ export function Step3Compare({ state, dispatch }: Props) {
       {state.compareStatus === 'ready' && (
         <>
           {/* Summary */}
-          <div className="change-type-summary">
-            {ALL_CHANGE_TYPES.map((ct) => (
-              <span key={ct} className={`change-badge change-badge--${ct}`}>
-                {CHANGE_TYPE_LABELS[ct]}: {typeCounts[ct]}
-              </span>
-            ))}
+          <div className="compare-panel compare-panel--summary">
+            <div className="change-type-summary">
+              {ALL_CHANGE_TYPES.map((ct) => (
+                <span key={ct} className={`change-badge change-badge--${ct}`}>
+                  {CHANGE_TYPE_LABELS[ct]}: {typeCounts[ct]}
+                </span>
+              ))}
+            </div>
           </div>
 
           {/* Filters */}
-          <div className="compare-filters">
-            <span>Φίλτρα:</span>
-            {ALL_CHANGE_TYPES.map((ct) => (
-              <label key={ct} className="checkbox-label">
-                <input
-                  type="checkbox"
-                  checked={state.filterChangeTypes.has(ct)}
-                  onChange={() => dispatch({ type: 'TOGGLE_FILTER_CHANGE_TYPE', changeType: ct })}
-                />
-                {CHANGE_TYPE_LABELS[ct]}
-              </label>
-            ))}
-            <input
-              type="text"
-              className="filter-input"
-              placeholder="Αριθμός / τίτλος άρθρου"
-              value={state.filterArticleQuery}
-              onChange={(e) => dispatch({ type: 'SET_FILTER_QUERY', query: e.target.value })}
-              aria-label="Φίλτρο άρθρου"
-            />
+          <div className="compare-panel compare-panel--filters">
+            <div className="compare-filters">
+              <span className="compare-filters__label">Φίλτρα:</span>
+              {ALL_CHANGE_TYPES.map((ct) => (
+                <label key={ct} className="checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={state.filterChangeTypes.has(ct)}
+                    onChange={() => dispatch({ type: 'TOGGLE_FILTER_CHANGE_TYPE', changeType: ct })}
+                  />
+                  {CHANGE_TYPE_LABELS[ct]}
+                </label>
+              ))}
+              <input
+                type="text"
+                className="filter-input compare-filters__search"
+                placeholder="Αριθμός / τίτλος άρθρου"
+                value={state.filterArticleQuery}
+                onChange={(e) => dispatch({ type: 'SET_FILTER_QUERY', query: e.target.value })}
+                aria-label="Φίλτρο άρθρου"
+              />
+            </div>
           </div>
 
           {filteredDiffs.length === 0 ? (

@@ -25,16 +25,18 @@ export function Step4DiffViewer({ state, dispatch }: Props) {
   const [attributionOpen, setAttributionOpen] = useState(false)
   const attributionAbortRef = useRef<AbortController | null>(null)
 
-  const filteredDiffs = state.diffs.filter((d) => {
-    if (!state.filterChangeTypes.has(d.change_type)) return false
-    const query = state.filterArticleQuery.toLowerCase()
-    if (query) {
-      const num = d.old_article?.article_number ?? d.new_article?.article_number ?? ''
-      const title = d.old_article?.title ?? d.new_article?.title ?? ''
-      if (!num.toLowerCase().includes(query) && !title.toLowerCase().includes(query)) return false
-    }
-    return true
-  })
+  const filteredDiffs = state.diffs
+    .map((d, idx) => ({ diff: d, originalIndex: idx }))
+    .filter(({ diff: d }) => {
+      if (!state.filterChangeTypes.has(d.change_type)) return false
+      const query = state.filterArticleQuery.toLowerCase()
+      if (query) {
+        const num = d.old_article?.article_number ?? d.new_article?.article_number ?? ''
+        const title = d.old_article?.title ?? d.new_article?.title ?? ''
+        if (!num.toLowerCase().includes(query) && !title.toLowerCase().includes(query)) return false
+      }
+      return true
+    })
 
   const VIRTUALIZE = filteredDiffs.length > 100
   const parentRef = useRef<HTMLDivElement>(null)
@@ -134,15 +136,16 @@ export function Step4DiffViewer({ state, dispatch }: Props) {
           <div ref={parentRef} className="diff-list diff-list--virtual" style={{ height: '600px', overflow: 'auto' }}>
             <div style={{ height: `${virtualizer.getTotalSize()}px`, position: 'relative' }}>
               {virtualizer.getVirtualItems().map((vItem) => {
-                const diff = filteredDiffs[vItem.index]
+                const row = filteredDiffs[vItem.index]
+                const diff = row.diff
                 return (
                   <div
-                    key={vItem.key}
+                    key={row.originalIndex}
                     style={{ position: 'absolute', top: vItem.start, width: '100%' }}
                     ref={virtualizer.measureElement}
                     data-index={vItem.index}
                   >
-                    <DiffRow diff={diff} index={vItem.index} onAttribute={runAttribution} />
+                    <DiffRow diff={diff} index={row.originalIndex} onAttribute={runAttribution} />
                   </div>
                 )
               })}
@@ -150,11 +153,28 @@ export function Step4DiffViewer({ state, dispatch }: Props) {
           </div>
         ) : (
           <div className="diff-list">
-            {filteredDiffs.map((diff, i) => (
-              <DiffRow key={i} diff={diff} index={i} onAttribute={runAttribution} />
+            {filteredDiffs.map((row) => (
+              <DiffRow key={row.originalIndex} diff={row.diff} index={row.originalIndex} onAttribute={runAttribution} />
             ))}
           </div>
         )}
+
+        <div className="field23-step4-complete">
+          {state.flowCompleted && (
+            <p className="field23-step4-complete__done" role="status">
+              Η ροή σημειώθηκε ως ολοκληρωμένη στην αρχική.
+            </p>
+          )}
+          {!state.flowCompleted && (
+            <button
+              type="button"
+              className="btn btn-field23-complete"
+              onClick={() => dispatch({ type: 'MARK_FLOW_COMPLETED' })}
+            >
+              Ολοκληρώθηκε
+            </button>
+          )}
+        </div>
       </StepContainer>
 
       {attributionOpen && selectedDiff && (
@@ -180,10 +200,18 @@ function DiffRow({
   index: number
   onAttribute: (i: number) => void
 }) {
-  const [expanded, setExpanded] = useState(diff.segments.length <= 300)
+  const [expanded, setExpanded] = useState(false)
   const articleLabel =
     diff.old_article?.article_number ?? diff.new_article?.article_number ?? `#${index + 1}`
-  const articleTitle = diff.old_article?.title ?? diff.new_article?.title ?? ''
+  const articleTitle =
+    diff.new_article?.title || diff.old_article?.title || '(Χωρίς τίτλο)'
+  const hasBothSides = Boolean(diff.old_article && diff.new_article)
+  const similarityPct = Number.isFinite(diff.similarity_score)
+    ? Math.max(0, Math.min(100, Math.round(diff.similarity_score * 100)))
+    : 0
+  const changePct = Number.isFinite(diff.token_change_fraction)
+    ? Math.max(0, Math.min(100, Math.round(diff.token_change_fraction * 100)))
+    : 0
 
   return (
     <div className={`diff-row diff-row--${diff.change_type}`}>
@@ -194,8 +222,15 @@ function DiffRow({
         <strong>Άρθρο {articleLabel}</strong>
         {articleTitle && <span className="diff-row__title">{articleTitle}</span>}
         <span className="diff-row__score">
-          Ομοιότητα: {Math.round(diff.similarity_score * 100)}%
+          Ομοιότητα: {hasBothSides ? `${similarityPct}%` : '—'} • Αλλαγή: {hasBothSides ? `${changePct}%` : '—'}
         </span>
+        <button
+          type="button"
+          className="btn btn-ghost btn-sm"
+          onClick={() => setExpanded((x) => !x)}
+        >
+          {expanded ? 'Απόκρυψη διαφοράς' : 'Προβολή διαφοράς'}
+        </button>
         <button
           type="button"
           className="btn btn-secondary btn-sm"
@@ -203,23 +238,52 @@ function DiffRow({
         >
           Απόδοση σχολίων
         </button>
-        {diff.segments.length > 300 && (
-          <button
-            type="button"
-            className="btn btn-ghost btn-sm"
-            onClick={() => setExpanded((x) => !x)}
-          >
-            {expanded ? 'Σύμπτυξη' : 'Ανάπτυξη'}
-          </button>
-        )}
       </div>
       {expanded && (
-        <div className="diff-segments">
-          {diff.segments.map((seg, si) => (
-            <SegmentSpan key={si} seg={seg} />
-          ))}
-        </div>
+        <UnifiedDiffBody diff={diff} />
       )}
+    </div>
+  )
+}
+
+function UnifiedDiffBody({ diff }: { diff: ArticleDiffOut }) {
+  const segs = diff.segments
+  if (segs.length > 0) {
+    return (
+      <div className="diff-segments diff-segments--github" role="region" aria-label="Διαφορά κειμένου">
+        {segs.map((seg, si) => (
+          <SegmentSpan key={si} seg={seg} />
+        ))}
+      </div>
+    )
+  }
+  if (diff.change_type === 'removed' && diff.old_article) {
+    const text = [diff.old_article.title, diff.old_article.body].filter(Boolean).join('\n\n').trim()
+    return (
+      <div className="diff-segments diff-segments--github" role="region" aria-label="Αφαιρεθέν κείμενο">
+        <del className="seg seg--delete" aria-label="Αφαιρέθηκε">
+          {text || '(κενό κείμενο)'}
+        </del>
+      </div>
+    )
+  }
+  if (diff.change_type === 'added' && diff.new_article) {
+    const text = [diff.new_article.title, diff.new_article.body].filter(Boolean).join('\n\n').trim()
+    return (
+      <div className="diff-segments diff-segments--github" role="region" aria-label="Προστιθέμενο κείμενο">
+        <ins className="seg seg--insert" aria-label="Προστέθηκε">
+          {text || '(κενό κείμενο)'}
+        </ins>
+      </div>
+    )
+  }
+  const plain =
+    diff.new_article?.body?.trim() ||
+    diff.old_article?.body?.trim() ||
+    '(δεν υπάρχει κείμενο για προβολή)'
+  return (
+    <div className="diff-segments diff-segments--github" role="region">
+      <span className="seg seg--equal">{plain}</span>
     </div>
   )
 }

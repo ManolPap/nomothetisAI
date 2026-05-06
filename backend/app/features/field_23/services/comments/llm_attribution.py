@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 from functools import lru_cache
 
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -24,6 +25,12 @@ from app.features.field_23.services.comments.loader import load_stored_legislati
 _MAX_ARTICLE_CHARS = 12_000
 _DEFAULT_MODEL = "gemini-2.0-flash"
 _SEM = asyncio.Semaphore(4)
+logger = logging.getLogger(__name__)
+
+
+def _estimate_tokens(text: str) -> int:
+    # Rough heuristic for Gemini-family prompts when tokenizer is unavailable.
+    return max(1, len(text) // 4)
 
 
 class _LLMContributionsPayload(BaseModel):
@@ -149,8 +156,21 @@ async def _attribute_single_item(
     initial_block = _format_article("ΑΡΧΙΚΟ ΑΡΘΡΟ", item.initial_article)
     final_block = _format_article("ΤΕΛΙΚΟ ΑΡΘΡΟ", item.final_article)
     comments_block = _format_comments_block(comments)
+    estimated_tokens = (
+        _estimate_tokens(initial_block)
+        + _estimate_tokens(final_block)
+        + _estimate_tokens(comments_block)
+    )
 
     async with _SEM:
+        logger.warning(
+            "field_23.llm.comments.request model=%s item_index=%s "
+            "comments_count=%s estimated_tokens=%s",
+            model_name,
+            item.item_index,
+            len(comments),
+            estimated_tokens,
+        )
         raw = await chain.ainvoke(
             {
                 "initial_block": initial_block,

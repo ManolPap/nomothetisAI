@@ -1,10 +1,31 @@
 import { Link } from 'react-router-dom'
+import { useEffect, useState } from 'react'
 import { useLawFiles } from '../providers/LawFilesProvider'
 import { FileUploader } from '../../shared/ui/FileUploader'
+import {
+  clearField23Persisted,
+  field23PersistEventName,
+  readField23HomeMeta,
+} from '../../features/field23/state/persist'
 
 export function HomePage() {
   const { initialLawFile, finalLawFile, setInitialLawFile, setFinalLawFile } = useLawFiles()
   const canProceed = Boolean(initialLawFile && finalLawFile)
+  const [field23Card, setField23Card] = useState(() => readField23HomeMeta())
+
+  useEffect(() => {
+    const refresh = () => setField23Card(readField23HomeMeta())
+    const ev = field23PersistEventName()
+    window.addEventListener(ev, refresh)
+    window.addEventListener('storage', refresh)
+    return () => {
+      window.removeEventListener(ev, refresh)
+      window.removeEventListener('storage', refresh)
+    }
+  }, [])
+
+  const canEnterField23 = canProceed || field23Card.hasSavedSession
+
   const workflows = [
     { to: '/field6', title: 'Πεδίο 6', description: 'Μεταδεδομένα, web facts, Eurostat και τελική σύνθεση κειμένου.' },
     { to: '/field9', title: 'Πεδίο 9', description: 'Εξαγωγή τομέα, επιλογή δεικτών και πίνακας τιμών στόχων.' },
@@ -51,27 +72,74 @@ export function HomePage() {
       </div>
 
       <section className="workflow-grid" aria-label="Διαθέσιμες ροές εργασίας">
-        {workflows.map((workflow) => (
-          <article key={workflow.to} className="workflow-card">
-            <h3>{workflow.title}</h3>
-            <p>{workflow.description}</p>
-            <Link
-              className={`btn btn-primary${!canProceed ? ' btn-disabled' : ''}`}
-              to={workflow.to}
-              aria-disabled={!canProceed}
-              onClick={(e) => {
-                if (!canProceed) e.preventDefault()
-              }}
-            >
-              Εκκίνηση ροής
-            </Link>
-          </article>
-        ))}
+        {workflows.map((workflow) => {
+          const isField23 = workflow.to === '/field23'
+          const canStart = isField23 ? canEnterField23 : canProceed
+          if (!isField23) {
+            return (
+              <article key={workflow.to} className="workflow-card">
+                <h3>{workflow.title}</h3>
+                <p>{workflow.description}</p>
+                <Link
+                  className={`btn btn-primary${!canProceed ? ' btn-disabled' : ''}`}
+                  to={workflow.to}
+                  aria-disabled={!canProceed}
+                  onClick={(e) => {
+                    if (!canProceed) e.preventDefault()
+                  }}
+                >
+                  Εκκίνηση ροής
+                </Link>
+              </article>
+            )
+          }
+          return (
+            <article key={workflow.to} className="workflow-card workflow-card--field23">
+              <h3>{workflow.title}</h3>
+              <p>{workflow.description}</p>
+              {field23Card.flowCompleted ? (
+                <>
+                  <Link
+                    className={`btn btn-field23-home-done${!canStart ? ' btn-disabled' : ''}`}
+                    to={workflow.to}
+                    aria-disabled={!canStart}
+                    onClick={(e) => {
+                      if (!canStart) e.preventDefault()
+                    }}
+                  >
+                    Ολοκληρώθηκε
+                  </Link>
+                  <button
+                    type="button"
+                    className="btn btn-ghost workflow-card__reset"
+                    onClick={() => {
+                      clearField23Persisted()
+                    }}
+                  >
+                    Επαναφορά ροής
+                  </button>
+                </>
+              ) : (
+                <Link
+                  className={`btn btn-primary${!canStart ? ' btn-disabled' : ''}`}
+                  to={workflow.to}
+                  aria-disabled={!canStart}
+                  onClick={(e) => {
+                    if (!canStart) e.preventDefault()
+                  }}
+                >
+                  {field23Card.hasSavedSession ? 'Συνέχιση ροής' : 'Εκκίνηση ροής'}
+                </Link>
+              )}
+            </article>
+          )
+        })}
       </section>
 
       {!canProceed && (
         <p className="hint-text" role="status">
-          Απαιτούνται και τα δύο αρχεία PDF για να ενεργοποιηθούν οι ροές.
+          Απαιτούνται και τα δύο αρχεία PDF για τις ροές 6 και 9.
+          {field23Card.hasSavedSession && ' Για το Πεδίο 23 μπορείτε να συνεχίσετε την αποθηκευμένη σας πρόοδο.'}
         </p>
       )}
 

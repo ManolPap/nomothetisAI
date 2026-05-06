@@ -9,12 +9,25 @@ _DIFF_WS_RE = re.compile(r"\s+")
 _QUOTE_VARIANTS_RE = re.compile(r"[΄’'᾽`´]")
 
 
+def _unify_dash_punctuation(s: str) -> str:
+    """Map Unicode dash punctuation and minus-like glyphs to ASCII hyphen-minus (e.g. – vs -)."""
+    out: list[str] = []
+    for ch in s:
+        cat = unicodedata.category(ch)
+        if cat == "Pd" or ch == "\u2212":  # Pd excludes U+2212 MINUS SIGN (Sm)
+            out.append("-")
+        else:
+            out.append(ch)
+    return "".join(out)
+
+
 def normalize_for_diff(text: str) -> str:
     """Optional cleanup before token diff (punctuation, case, spaces, Greek accents)."""
     cleaned = text or ""
     cleaned = _QUOTE_VARIANTS_RE.sub("'", cleaned)
     cleaned = unicodedata.normalize("NFKD", cleaned)
     cleaned = "".join(c for c in cleaned if not unicodedata.combining(c))
+    cleaned = _unify_dash_punctuation(cleaned)
     cleaned = _DIFF_PUNCT_RE.sub("", cleaned)
     cleaned = cleaned.lower()
     cleaned = _DIFF_WS_RE.sub(" ", cleaned).strip()

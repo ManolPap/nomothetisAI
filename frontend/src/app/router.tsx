@@ -3,7 +3,6 @@ import { Field4Page } from '../features/field4/pages/Field4Page'
 import { Field6Page } from '../features/field6/pages/Field6Page'
 import { Field9Page } from '../features/field9/pages/Field9Page'
 import { Field23Page } from '../features/field23/pages/Field23Page'
-import { HomePage } from './pages/HomePage'
 
 function Nav() {
   return (

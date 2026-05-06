@@ -1,13 +1,31 @@
-import { useReducer } from 'react'
+import { useEffect, useReducer } from 'react'
 import { ErrorBoundary } from '../../../shared/ui/ErrorBoundary'
 import { field23Reducer, initialField23State } from '../state/reducer'
+import { field23PersistEventName, loadField23Persisted, saveField23Persisted } from '../state/persist'
 import { Step1Input } from '../components/Step1Input'
 import { Step2Split } from '../components/Step2Split'
 import { Step3Compare } from '../components/Step3Compare'
 import { Step4DiffViewer } from '../components/Step4DiffViewer'
 
 export function Field23Page() {
-  const [state, dispatch] = useReducer(field23Reducer, initialField23State)
+  const [state, dispatch] = useReducer(
+    field23Reducer,
+    initialField23State,
+    (base) => loadField23Persisted() ?? base,
+  )
+
+  useEffect(() => {
+    saveField23Persisted(state)
+  }, [state])
+
+  useEffect(() => {
+    const sync = () => {
+      if (!loadField23Persisted()) dispatch({ type: 'RESET_FIELD23_WORKFLOW' })
+    }
+    const ev = field23PersistEventName()
+    window.addEventListener(ev, sync)
+    return () => window.removeEventListener(ev, sync)
+  }, [dispatch])
 
   return (
     <ErrorBoundary fallbackTitle="Σφάλμα στο Πεδίο 23">
