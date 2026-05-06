@@ -399,8 +399,14 @@ a {
   color: #8a2020;
 }
 
+.error-banner__icon {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
 .error-banner__message {
   flex: 1;
+  font-size: 0.9rem;
 }
 
 .form-grid {
@@ -537,6 +543,18 @@ a {
   margin-bottom: 0.35rem;
 }
 
+.empty-state__message {
+  margin: 0;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.empty-state__hint {
+  margin: 0.35rem 0 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
 .inline-retry {
   font-size: 0.82rem;
   color: var(--muted);
@@ -573,6 +591,30 @@ a {
 
 .checkbox-label input[type="checkbox"] {
   margin-top: 0.15rem;
+  flex-shrink: 0;
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--primary);
+}
+
+.checkbox-list__item {
+  padding: 0.45rem;
+  border-radius: 8px;
+}
+
+.checkbox-list__item:hover {
+  background: #f5f8ff;
+}
+
+.nim-text-block {
+  margin-top: 1.25rem;
+}
+
+.nim-text-block h4 {
+  margin: 0 0 0.4rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--muted);
 }
 
 .nim-text-block__pre,
@@ -595,6 +637,22 @@ a {
 
 .facts-section {
   margin-bottom: 1rem;
+}
+
+.facts-section h3,
+.sources-section h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.source-card__body,
+.indicator-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
 }
 
 .source-card__title,
@@ -635,6 +693,18 @@ a {
   gap: 0.4rem;
 }
 
+.eurostat-indicator {
+  margin: 0 0 0.75rem;
+  font-size: 0.9rem;
+}
+
+.year-label {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.82rem;
+}
+
 .synthesis-result {
   display: flex;
   flex-direction: column;
@@ -673,6 +743,16 @@ a {
 
 .data-table th {
   background: #f5f8ff;
+}
+
+.data-table tbody tr:hover {
+  background: #fafbff;
+}
+
+.metadata-form h3 {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+  font-weight: 600;
 }
 
 .compare-controls,
@@ -852,6 +932,10 @@ a {
   font-size: 0.85rem;
 }
 
+.diff-segments .seg--equal {
+  color: #374151;
+}
+
 .diff-segments--github {
   background: var(--surface, #fff);
   border: 1px solid var(--border);
@@ -936,6 +1020,25 @@ a {
   padding: 0.9rem;
 }
 
+.attribution-item__header {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+}
+
+.attribution-item__id {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.attribution-item__rationale {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text);
+}
+
 .error-boundary {
   border: 1px solid #f6bbbb;
   border-radius: 12px;
@@ -944,15 +1047,32 @@ a {
   text-align: center;
 }
 
+.error-boundary h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1.1rem;
+}
+
+.error-boundary p {
+  margin: 0 0 1rem;
+  color: var(--muted);
+}
+
 .confirm-dialog {
-  border: 1px solid var(--border);
+  border: none;
   border-radius: 14px;
   max-width: 420px;
-  padding: 1.1rem;
+  padding: 1.25rem;
+  box-shadow: 0 8px 30px rgba(18, 38, 85, 0.18);
+}
+
+.confirm-dialog::backdrop {
+  background: rgba(17, 24, 39, 0.45);
 }
 
 .confirm-dialog__title {
   margin: 0 0 0.35rem;
+  font-size: 1.05rem;
+  font-weight: 700;
 }
 
 .confirm-dialog__desc {
