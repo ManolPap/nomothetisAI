@@ -138,6 +138,7 @@ async def synthesize(body: SynthesizeRequest) -> SynthesizeResponse:
         metadata_dict,
         body.facts_text,
         body.eurostat_text,
+        selected_sources=[s.model_dump() for s in body.selected_sources],
     )
 
     return SynthesizeResponse(

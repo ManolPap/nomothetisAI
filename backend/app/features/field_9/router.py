@@ -1,5 +1,6 @@
 """FastAPI router για το Πεδίο 9 — Ειδικότεροι στόχοι."""
 
+import logging
 import os
 import tempfile
 from typing import Annotated
@@ -27,6 +28,7 @@ from app.features.field_9.services.eurostat import (
 from app.features.field_9.services.llm_service import extract_llm_content
 from app.features.field_9.services.pdf_reader import extract_text_from_pdf
 
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/field9", tags=["field9"])
 
 
@@ -35,9 +37,8 @@ async def extract_sector(
     file: Annotated[UploadFile, File(description="PDF αρχείο του νόμου")],
 ) -> ExtractSectorResponse:
     """Διαβάζει PDF νόμου και εξάγει τομέα, έτος και τίτλο."""
-    print("\n" + "=" * 60)
-    print("ΠΕΔΙΟ 9 — Βήμα 1: Εξαγωγή τομέα και έτους")
-    print("=" * 60)
+    if not file.filename or not file.filename.lower().endswith(".pdf"):
+        raise HTTPException(status_code=400, detail="Το αρχείο πρέπει να είναι PDF.")
 
     with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
         content = await file.read()
@@ -56,7 +57,7 @@ async def extract_sector(
         ])
 
         raw = extract_llm_content(response).strip()
-        print(f"  LLM απάντηση:\n{raw}")
+        logger.debug("LLM απάντηση extract-sector:\n%s", raw)
 
         sector = ""
         year = 0
@@ -89,37 +90,35 @@ async def suggest_indicators_endpoint(
     request: SuggestIndicatorsRequest,
 ) -> SuggestIndicatorsResponse:
     """Προτείνει κατάλληλους δείκτες βάσει τομέα νόμου."""
-    print("\n" + "=" * 60)
-    print("ΠΕΔΙΟ 9 — Βήμα 2: Πρόταση δεικτών")
-    print("=" * 60)
-    print(f"  Τομέας: {request.sector}")
+    logger.info("Πρόταση δεικτών — τομέας: %s, έτος: %d", request.sector, request.year)
 
     suggestions = suggest_indicators(
         sector=request.sector,
         law_title=request.law_title,
+        year=request.year,
     )
 
-    print(f"  Προτάθηκαν {len(suggestions)} δείκτες")
+    logger.info("Προτάθηκαν %d δείκτες", len(suggestions))
     return SuggestIndicatorsResponse(suggestions=suggestions)
 
 
 @router.post("/fetch-data", response_model=FetchDataResponse)
 async def fetch_data(request: FetchDataRequest) -> FetchDataResponse:
     """Φέρνει Eurostat δεδομένα για τους επιλεγμένους δείκτες."""
-    print("\n" + "=" * 60)
-    print("ΠΕΔΙΟ 9 — Βήμα 3: Eurostat δεδομένα")
-    print("=" * 60)
-    print(f"  Δείκτες: {request.selected_indicators}")
-    print(f"  Έτος αναφοράς: {request.year}")
+    logger.info(
+        "Eurostat δεδομένα — δείκτες: %s, έτος αναφοράς: %d",
+        request.selected_indicators,
+        request.year,
+    )
 
     indicators = []
     for dataset_id in request.selected_indicators:
         data = fetch_indicator_data(dataset_id, request.year)
         if data:
             indicators.append(data)
-            print(f"  ✓ {dataset_id}: {len(data.values)} τιμές")
+            logger.debug("%s: %d τιμές", dataset_id, len(data.values))
         else:
-            print(f"  ✗ {dataset_id}: δεν βρέθηκαν δεδομένα")
+            logger.info("%s: δεν βρέθηκαν δεδομένα", dataset_id)
 
     five_year_range = get_five_year_range(request.year)
 

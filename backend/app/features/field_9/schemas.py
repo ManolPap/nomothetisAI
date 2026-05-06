@@ -27,6 +27,7 @@ class IndicatorSuggestion(BaseModel):
     indicator_name: str
     description: str
     sector: str
+    relevance_reason: str = ""
 
 
 class SuggestIndicatorsResponse(BaseModel):

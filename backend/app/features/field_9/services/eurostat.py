@@ -1,5 +1,8 @@
 """Eurostat service για το Πεδίο 9 — φέρνει χρονοσειρά για Ελλάδα."""
 
+import logging
+import re
+
 import requests  # type: ignore[import-untyped]
 from langchain_core.messages import HumanMessage, SystemMessage
 
@@ -15,13 +18,15 @@ from app.features.field_9.prompt import (
 from app.features.field_9.schemas import IndicatorData, IndicatorSuggestion, YearlyValue
 from app.features.field_9.services.llm_service import extract_llm_content
 
+logger = logging.getLogger(__name__)
+
 
 def get_five_year_range(reference_year: int) -> list[int]:
     """Επιστρέφει τα 5 έτη πριν από το έτος αναφοράς."""
     return list(range(reference_year - 5, reference_year))
 
 
-def suggest_indicators(sector: str, law_title: str) -> list[IndicatorSuggestion]:
+def suggest_indicators(sector: str, law_title: str, year: int) -> list[IndicatorSuggestion]:
     """Χρησιμοποιεί LLM για να προτείνει κατάλληλους δείκτες."""
     catalog_text = "\n".join([
         f"{i + 1}. {did}: {info[0]} — {info[3]}"
@@ -40,22 +45,27 @@ def suggest_indicators(sector: str, law_title: str) -> list[IndicatorSuggestion]
         HumanMessage(content=SUGGEST_INDICATORS_HUMAN_TEMPLATE.format(
             sector=sector,
             law_title=law_title,
+            year=year,
             catalog_text=catalog_text,
         )),
     ])
 
     raw = extract_llm_content(response).strip()
-    print(f"  LLM πρότεινε: {raw}")
+    logger.debug("LLM πρότεινε δείκτες: %s", raw)
 
     suggestions = []
     catalog_keys = list(FIELD9_CATALOG.keys())
     catalog_values = list(FIELD9_CATALOG.values())
 
-    for part in raw.split(","):
-        part = part.strip()
-        if not part.isdigit():
+    for line in raw.splitlines():
+        line = line.strip()
+        if not line:
             continue
-        idx = int(part) - 1
+        match = re.match(r"^(\d+)\s*:\s*(.*)$", line)
+        if not match:
+            continue
+        idx = int(match.group(1)) - 1
+        relevance_reason = match.group(2).strip()
         if 0 <= idx < len(catalog_keys):
             did = catalog_keys[idx]
             info = catalog_values[idx]
@@ -64,6 +74,7 @@ def suggest_indicators(sector: str, law_title: str) -> list[IndicatorSuggestion]
                 indicator_name=info[0],
                 description=info[3],
                 sector=info[2],
+                relevance_reason=relevance_reason,
             ))
 
     return suggestions
@@ -87,7 +98,7 @@ def fetch_indicator_data(dataset_id: str, reference_year: int) -> IndicatorData 
         f"?format=JSON&lang=EN&unit={unit}&geo=EL&{time_params}"
     )
 
-    print(f"  Fetching: {url}")
+    logger.debug("Fetching Eurostat: %s", url)
 
     try:
         response = requests.get(url, timeout=15)
@@ -99,7 +110,7 @@ def fetch_indicator_data(dataset_id: str, reference_year: int) -> IndicatorData 
         time_index = dims.get("time", {}).get("category", {}).get("index", {})
 
         if not values_raw or not time_index:
-            print(f"  Άδεια δεδομένα για {dataset_id}")
+            logger.info("Άδεια δεδομένα Eurostat για %s", dataset_id)
             return None
 
         time_size = len(time_index)
@@ -129,5 +140,5 @@ def fetch_indicator_data(dataset_id: str, reference_year: int) -> IndicatorData 
         )
 
     except Exception as e:
-        print(f"  Σφάλμα Eurostat για {dataset_id}: {e}")
+        logger.warning("Σφάλμα Eurostat για %s: %s", dataset_id, e)
         return None

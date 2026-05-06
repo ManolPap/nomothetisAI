@@ -150,12 +150,13 @@ SYNTHESIS_HUMAN_TEMPLATE = """Συμπλήρωσε το Πεδίο 6 της Αν
 Επαληθευμένα facts από διεθνείς πηγές:
 {facts_text}
 
-{eurostat_section}Παραδείγματα καλά συμπληρωμένων πεδίων 6 από τη Βουλή:
+{selected_sources_section}{eurostat_section}Παραδείγματα καλά συμπληρωμένων πεδίων 6 από τη Βουλή:
 {few_shot_examples}
 
 ΚΑΝΟΝΕΣ ΣΥΓΓΡΑΦΗΣ:
 - Γράψε αποκλειστικά στα ΕΛΛΗΝΙΚΑ
 - Μέγιστο 250 λέξεις συνολικά
+- Χρησιμοποίησε ΜΟΝΟ τα facts και τις πηγές που παρέχονται παραπάνω
 - Σκοπός είναι να αναδειχθούν πρακτικές που ΑΠΟΔΕΔΕΙΓΜΕΝΑ φέρουν αποτελέσματα
 - Προτίμησε facts με μετρήσιμα αποτελέσματα (αριθμοί, ποσοστά, ημερομηνίες)
 - Προτίμησε τα πιο πρόσφατα facts όταν υπάρχουν νεότερες πληροφορίες
@@ -179,6 +180,7 @@ def build_synthesis_human(
     ministry: str,
     facts_text: str,
     eurostat_text: str = "",
+    selected_sources: list[dict] | None = None,
 ) -> str:
     eurostat_section = (
         f"ΜΕΤΡΗΣΙΜΟΙ ΔΕΙΚΤΕΣ ΑΠΟ EUROSTAT "
@@ -186,12 +188,21 @@ def build_synthesis_human(
         if eurostat_text
         else ""
     )
+    selected_sources_section = ""
+    if selected_sources:
+        lines = ["ΕΓΚΕΚΡΙΜΕΝΕΣ ΠΗΓΕΣ ΑΠΟ ΤΟΝ ΧΡΗΣΤΗ (χρησιμοποίησε μόνο αυτές):"]
+        for src in selected_sources:
+            lines.append(f"- {src.get('title', '')} | {src.get('url', '')}")
+            if src.get("content"):
+                lines.append(f"  Απόσπασμα: {src['content'][:400]}")
+        selected_sources_section = "\n".join(lines) + "\n\n"
     return SYNTHESIS_HUMAN_TEMPLATE.format(
         topic=topic,
         measures=measures,
         sector=sector,
         ministry=ministry,
         facts_text=facts_text,
+        selected_sources_section=selected_sources_section,
         eurostat_section=eurostat_section,
         few_shot_examples=FEW_SHOT_EXAMPLES,
     )

@@ -17,20 +17,6 @@ class WebSource(BaseModel):
     content: str = Field(description="Απόσπασμα περιεχομένου (έως 600 χαρ.)")
 
 
-class Field6Response(BaseModel):
-    law_name: str = Field(description="Όνομα αρχείου PDF χωρίς επέκταση")
-    metadata: LawMetadata
-    eurlex_nim: str = Field(
-        default="",
-        description="Κείμενο από EUR-Lex National Implementation Measures",
-    )
-    queries_used: list[str] = Field(description="Search queries που χρησιμοποιήθηκαν")
-    sources: list[WebSource] = Field(description="Πηγές από web search")
-    extracted_facts: str = Field(description="Facts ανά κατηγορία (i, ii, iii)")
-    field6_text: str = Field(description="Τελικό κείμενο Πεδίου 6")
-    word_count: int = Field(description="Πλήθος λέξεων στο κείμενο Πεδίου 6")
-
-
 class MetadataResponse(BaseModel):
     metadata: LawMetadata
     nim_text: str
@@ -51,8 +37,18 @@ class EurostatRequest(BaseModel):
     facts_text: str
 
 
+class EurostatCountryEntry(BaseModel):
+    name: str = Field(description="Πλήρες όνομα χώρας")
+    values: dict[str, float] = Field(description="Τιμές ανά έτος, π.χ. {'2022': 12.3}")
+    indicator: str = Field(description="Όνομα δείκτη Eurostat")
+    dataset_id: str = Field(description="Κωδικός dataset Eurostat")
+    url: str = Field(description="Σύνδεσμος Eurostat databrowser")
+
+
 class EurostatResponse(BaseModel):
-    eurostat_data: dict
+    eurostat_data: dict[str, EurostatCountryEntry] = Field(
+        description="Δεδομένα ανά κωδικό χώρας (π.χ. 'DE', 'FR')",
+    )
     indicator_name: str
 
 

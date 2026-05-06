@@ -31,6 +31,8 @@ async def split_law_endpoint(
         File(description="Νόμος σε μορφή PDF"),
     ],
 ) -> SplitLawResponse:
+    if not law_pdf.filename or not law_pdf.filename.lower().endswith(".pdf"):
+        raise HTTPException(status_code=400, detail="Το αρχείο πρέπει να είναι PDF.")
     articles = await split_uploaded_law(law_pdf)
     return SplitLawResponse(articles=[ArticleOut(**a) for a in articles])
 

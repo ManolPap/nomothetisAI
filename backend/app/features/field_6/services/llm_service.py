@@ -213,6 +213,7 @@ def step6_synthesize_field6(
     metadata: dict,
     facts_text: str,
     eurostat_text: str = "",
+    selected_sources: list[dict] | None = None,
 ) -> str:
     """
     Συνθέτει το κείμενο του Πεδίου 6 με few-shot examples
@@ -231,6 +232,7 @@ def step6_synthesize_field6(
             ministry=metadata["ministry"],
             facts_text=facts_text,
             eurostat_text=eurostat_text,
+            selected_sources=selected_sources,
         )),
     ])
 
