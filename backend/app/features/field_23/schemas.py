@@ -76,7 +76,8 @@ class AttributeLegislativeCommentsRequest(BaseModel):
     model: str | None = Field(
         default=None,
         description=(
-            "Προαιρετικό όνομα μοντέλου Gemini· default: env FIELD_23_COMMENT_ATTRIBUTION_MODEL "
+            "Προαιρετικό όνομα μοντέλου Gemini· default: env "
+            "FEATURE_FIELD_23_COMMENT_ATTRIBUTION_MODEL "
             "ή gemini-2.0-flash"
         ),
     )

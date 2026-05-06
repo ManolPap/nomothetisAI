@@ -1,8 +1,8 @@
-import os
 from typing import Annotated
 
 from fastapi import APIRouter, File, HTTPException, UploadFile
 
+from app.core.config import settings
 from app.features.field_23.schemas import (
     ArticleOut,
     AttributeLegislativeCommentsRequest,
@@ -58,15 +58,15 @@ def compare_laws_endpoint(body: CompareLawsRequest) -> CompareLawsResponse:
         "Για κάθε item: αρχικό και τελικό άρθρο. Τα σχόλια φορτώνονται από "
         "`field_23/data/legislative_comments.json` όπου `target_article_number` ταιριάζει με "
         "το `article_number` του αρχικού ή του τελικού. Το Gemini (LangChain) εκτιμά αν κάθε "
-        "σχόλιο μπορεί να συνέβαλε στη διαφορά. Απαιτείται GOOGLE_API_KEY."
+        "σχόλιο μπορεί να συνέβαλε στη διαφορά. Απαιτείται FEATURE_FIELD_23_GOOGLE_API_KEY."
     ),
 )
 async def attribute_legislative_comments_endpoint(
     body: AttributeLegislativeCommentsRequest,
 ) -> AttributeLegislativeCommentsResponse:
-    if not os.getenv("GOOGLE_API_KEY"):
+    if settings.feature.field_23_google_api_key is None:
         raise HTTPException(
             status_code=503,
-            detail="Ρυθμίστε GOOGLE_API_KEY για κλήσεις στο Gemini.",
+            detail="Ρυθμίστε FEATURE_FIELD_23_GOOGLE_API_KEY για κλήσεις στο Gemini.",
         )
     return await attribute_legislative_comments_llm(body)

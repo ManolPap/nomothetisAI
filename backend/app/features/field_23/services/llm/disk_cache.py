@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 import hashlib
-import os
 from pathlib import Path
 
 from diskcache import Cache
 
+from app.core.config import settings
+
 DEFAULT_CACHE_DIR = Path.home() / ".cache" / "legal_analyzer" / "llm_cache"
-CACHE_DIR = Path(os.getenv("LEGAL_ANALYZER_CACHE_DIR", str(DEFAULT_CACHE_DIR)))
+CACHE_DIR = Path(settings.feature.field_23_legal_analyzer_cache_dir or str(DEFAULT_CACHE_DIR))
 CACHE_DIR.mkdir(parents=True, exist_ok=True)
 LLM_CACHE: Cache = Cache(str(CACHE_DIR))
 

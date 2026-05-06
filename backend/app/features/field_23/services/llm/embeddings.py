@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-import os
 import time
 from collections.abc import Callable
 
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from pydantic import SecretStr
 
+from app.core.config import settings
 from app.features.field_23.services.llm.disk_cache import LLM_CACHE, hash_text
 
 
@@ -27,7 +27,14 @@ class CachedEmbeddings:
         self._models: list[str] = [model] + list(fallback_models or ["models/embedding-001"])
         self._models = list(dict.fromkeys(self._models))
         self._active_model = self._models[0]
-        self._api_key = api_key or os.getenv("GOOGLE_API_KEY")
+        self._api_key = (
+            api_key
+            or (
+                settings.feature.field_23_google_api_key.get_secret_value()
+                if settings.feature.field_23_google_api_key
+                else None
+            )
+        )
         self._namespace = namespace
         self._preprocess = preprocess
         self._max_batch_size = max(1, int(max_batch_size))

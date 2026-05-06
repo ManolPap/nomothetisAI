@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 import asyncio
-import os
 from functools import lru_cache
 
 from langchain_google_genai import ChatGoogleGenerativeAI
 from pydantic import BaseModel, Field
 
+from app.core.config import settings
 from app.features.field_23.schemas import (
     ArticleChangeCommentsItem,
     ArticleOut,
@@ -90,9 +90,14 @@ def _format_comments_block(comments: list[StoredLegislativeComment]) -> str:
 
 @lru_cache(maxsize=1)
 def _chat_factory(model_name: str) -> ChatGoogleGenerativeAI:
+    api_key = (
+        settings.feature.field_23_google_api_key.get_secret_value()
+        if settings.feature.field_23_google_api_key
+        else None
+    )
     return ChatGoogleGenerativeAI(
         model=model_name,
-        google_api_key=os.getenv("GOOGLE_API_KEY"),
+        google_api_key=api_key,
         temperature=0.1,
     )
 
@@ -135,7 +140,7 @@ async def _attribute_single_item(
     if not comments:
         return ItemAttributionOut(item_index=item.item_index, contributions=[])
 
-    model_name = model or os.getenv("FIELD_23_COMMENT_ATTRIBUTION_MODEL", _DEFAULT_MODEL)
+    model_name = model or settings.feature.field_23_comment_attribution_model or _DEFAULT_MODEL
     llm = _chat_factory(model_name)
     structured = llm.with_structured_output(_LLMContributionsPayload)
 
