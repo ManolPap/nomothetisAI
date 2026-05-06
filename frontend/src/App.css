@@ -864,3 +864,8 @@ a {
     grid-template-columns: 1fr;
   }
 }
+
+.no-data-warning {
+  color: #c0392b;
+  font-size: 0.78rem;
+}
