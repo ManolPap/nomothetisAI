@@ -12,21 +12,21 @@ import type {
 export function extractMetadata(file: File, signal?: AbortSignal): Promise<MetadataResponse> {
   const form = new FormData()
   form.append('file', file)
-  return postFormData<MetadataResponse>(buildUrl('/field6/extract-metadata'), form, { signal })
+  return postFormData<MetadataResponse>(buildUrl('/api/field-6/extract-metadata'), form, { signal, timeoutMs: 120_000 })
 }
 
 export function webSearch(
   payload: { metadata: LawMetadata; nim_text: string },
   signal?: AbortSignal,
 ): Promise<WebSearchResponse> {
-  return postJson<WebSearchResponse>(buildUrl('/field6/web-search'), payload, { signal })
+  return postJson<WebSearchResponse>(buildUrl('/api/field-6/web-search'), payload, { signal, timeoutMs: 120_000 })
 }
 
 export function fetchEurostat(
   payload: { metadata: LawMetadata; facts_text: string },
   signal?: AbortSignal,
 ): Promise<EurostatResponse> {
-  return postJson<EurostatResponse>(buildUrl('/field6/eurostat'), payload, { signal })
+  return postJson<EurostatResponse>(buildUrl('/api/field-6/eurostat'), payload, { signal, timeoutMs: 120_000 })
 }
 
 export function synthesizeField6(
@@ -38,5 +38,5 @@ export function synthesizeField6(
   },
   signal?: AbortSignal,
 ): Promise<SynthesizeResponse> {
-  return postJson<SynthesizeResponse>(buildUrl('/field6/synthesize'), payload, { signal })
+  return postJson<SynthesizeResponse>(buildUrl('/api/field-6/synthesize'), payload, { signal, timeoutMs: 120_000 })
 }

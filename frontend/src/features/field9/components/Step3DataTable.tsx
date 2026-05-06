@@ -42,77 +42,97 @@ export function Step3DataTable({ state, dispatch }: Props) {
       {state.fetchStatus === 'loading' && <LoadingPanel message="Λήψη δεδομένων δεικτών…" />}
       {state.fetchError && <ErrorBanner message={state.fetchError} onRetry={loadData} />}
 
-      {state.fetchStatus === 'ready' && (
-        <>
-          {state.indicators.length === 0 ? (
-            <EmptyState message="Δεν βρέθηκαν δεδομένα δεικτών." />
-          ) : (
-            <div className="table-wrapper">
-              <p className="table-meta">
-                Έτος αναφοράς: <strong>{state.referenceYear}</strong> | Εύρος 5ετίας:{' '}
-                <strong>{state.fiveYearRange.join(', ')}</strong>
-              </p>
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th>Δείκτης</th>
-                    <th>Dataset ID</th>
-                    {state.fiveYearRange.map((y) => <th key={y}>{y}</th>)}
-                    <th>Μονάδα</th>
-                    <th>Στόχος 3ετίας</th>
-                    <th>Πηγή</th>
+      {state.fetchStatus === 'ready' && (() => {
+        const returnedIds = new Set(state.indicators.map((ind) => ind.dataset_id))
+        const missingRows = Array.from(state.selectedDatasetIds)
+          .filter((id) => !returnedIds.has(id))
+          .map((id) => ({
+            dataset_id: id,
+            indicator_name: state.suggestions.find((s) => s.dataset_id === id)?.indicator_name ?? id,
+          }))
+        const hasAnyRows = state.indicators.length > 0 || missingRows.length > 0
+
+        if (!hasAnyRows) {
+          return <EmptyState message="Δεν βρέθηκαν δεδομένα Eurostat για την Ελλάδα." />
+        }
+
+        return (
+          <div className="table-wrapper">
+            <p className="table-meta">
+              Έτος αναφοράς: <strong>{state.referenceYear}</strong> | Εύρος 5ετίας:{' '}
+              <strong>{state.fiveYearRange.join(', ')}</strong>
+            </p>
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Δείκτης</th>
+                  {state.fiveYearRange.map((y) => <th key={y}>{y}</th>)}
+                  <th>Πρόσφατα</th>
+                  <th>Στόχος 3ετίας</th>
+                  <th>Πηγή</th>
+                </tr>
+              </thead>
+              <tbody>
+                {state.indicators.map((ind) => (
+                  <tr key={ind.dataset_id}>
+                    <td>{ind.indicator_name}</td>
+                    {state.fiveYearRange.map((y) => {
+                      const entry = ind.values.find((v) => v.year === y)
+                      return (
+                        <td key={y}>
+                          {entry == null || entry.value == null ? '—' : `${entry.value}%`}
+                        </td>
+                      )
+                    })}
+                    <td>
+                      {(() => {
+                        const entry = ind.values.find((v) => v.year === state.referenceYear)
+                        return entry == null || entry.value == null ? '—' : `${entry.value}%`
+                      })()}
+                    </td>
+                    <td>
+                      <input
+                        type="text"
+                        className="target-input"
+                        value={state.targetValues[ind.dataset_id] ?? ''}
+                        onChange={(e) =>
+                          dispatch({
+                            type: 'SET_TARGET_VALUE',
+                            datasetId: ind.dataset_id,
+                            value: e.target.value,
+                          })
+                        }
+                        aria-label={`Στόχος 3ετίας για ${ind.indicator_name}`}
+                      />
+                    </td>
+                    <td>
+                      {ind.eurostat_url ? (
+                        <a href={ind.eurostat_url} target="_blank" rel="noopener noreferrer">
+                          Eurostat
+                        </a>
+                      ) : (
+                        '—'
+                      )}
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {state.indicators.map((ind) => (
-                    <tr key={ind.dataset_id}>
-                      <td>{ind.indicator_name}</td>
-                      <td>{ind.dataset_id}</td>
-                      {state.fiveYearRange.map((y) => {
-                        const entry = ind.values.find((v) => v.year === y)
-                        return (
-                          <td key={y}>
-                            {entry == null || entry.value == null ? '—' : entry.value}
-                          </td>
-                        )
-                      })}
-                      <td>{ind.unit}</td>
-                      <td>
-                        <input
-                          type="text"
-                          className="target-input"
-                          value={state.targetValues[ind.dataset_id] ?? ''}
-                          onChange={(e) =>
-                            dispatch({
-                              type: 'SET_TARGET_VALUE',
-                              datasetId: ind.dataset_id,
-                              value: e.target.value,
-                            })
-                          }
-                          aria-label={`Στόχος 3ετίας για ${ind.indicator_name}`}
-                        />
-                      </td>
-                      <td>
-                        {ind.eurostat_url ? (
-                          <a
-                            href={ind.eurostat_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            Eurostat
-                          </a>
-                        ) : (
-                          '—'
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </>
-      )}
+                ))}
+                {missingRows.map((row) => (
+                  <tr key={row.dataset_id}>
+                    <td>
+                      <div>{row.indicator_name}</div>
+                      <div className="no-data-warning">Δεν βρέθηκαν δεδομένα για την Ελλάδα</div>
+                    </td>
+                    {state.fiveYearRange.map((y) => <td key={y}>—</td>)}
+                    <td>—</td>
+                    <td></td>
+                    <td></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )
+      })()}
     </StepContainer>
   )
 }

@@ -16,14 +16,14 @@ router = APIRouter()
 #     try:
 #         filename = file.filename or "uploaded.pdf"
 #         suffix = Path(filename).suffix or ".pdf"
-#
+
 #         with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
 #             tmp.write(await file.read())
 #             pdf_path = tmp.name
-#
+
 #         main_body = extract_main_bill_body(pdf_path)
 #         articles = split_articles(main_body)
-#
+
 #         return {
 #             "filename": filename,
 #             "articles_count": len(articles),
@@ -31,7 +31,7 @@ router = APIRouter()
 #             "main_body_end_preview": main_body[-1000:],
 #             "first_article": articles[0] if articles else None,
 #         }
-#
+
 #     except Exception as e:
 #         raise HTTPException(status_code=500, detail=str(e)) from e
 
@@ -49,6 +49,8 @@ async def analyze_field_4(file: Annotated[UploadFile, File(...)])-> dict[str,obj
         main_body = extract_main_bill_body(pdf_path)
         articles = split_articles(main_body)
         field_4_answer = analyze_bill_field_4(articles)
+        print("FIELD 4 ANSWER:")
+        print(field_4_answer)
 
         return {
             "filename": filename,

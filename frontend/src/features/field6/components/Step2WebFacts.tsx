@@ -6,8 +6,53 @@ import { ErrorBanner } from '../../../shared/ui/ErrorBanner'
 import { EmptyState } from '../../../shared/ui/EmptyState'
 import { isApiError } from '../../../shared/api/errors'
 import { webSearch } from '../api'
-import { parseFactsText } from '../utils'
 import type { Field6Action, Field6State } from '../state/reducer'
+
+const CATEGORY_LABELS: Record<string, string> = {
+  ΚΑΤΗΓΟΡΙΑ_i: 'Χώρες ΕΕ/ΟΟΣΑ',
+  ΚΑΤΗΓΟΡΙΑ_ii: 'Όργανα ΕΕ',
+  ΚΑΤΗΓΟΡΙΑ_iii: 'Διεθνείς Οργανισμοί',
+}
+
+type FactDisplayItem =
+  | { kind: 'header'; label: string }
+  | { kind: 'fact'; text: string; idx: number }
+
+function buildFactDisplayItems(factsText: string): FactDisplayItem[] {
+  const items: FactDisplayItem[] = []
+  let factIdx = 0
+  for (const rawLine of factsText.split('\n')) {
+    const line = rawLine.trim()
+    if (!line) continue
+    const catMatch = line.match(/^(ΚΑΤΗΓΟΡΙΑ_\w+)/i)
+    if (catMatch) {
+      const label = CATEGORY_LABELS[catMatch[1]] ?? catMatch[1]
+      items.push({ kind: 'header', label })
+      continue
+    }
+    const content = line
+      .replace(/^\*?\s*FACT_[ivxlcdm]+:?\s*/i, '')
+      .replace(/\*+\s*$/, '')
+      .replace(/(\s*\|\s*-\s*)+\s*$/g, '')
+      .trim()
+    if (!content || content === '-') continue
+    items.push({ kind: 'fact', text: content, idx: factIdx++ })
+  }
+  return items
+}
+
+function renderTextWithLinks(text: string) {
+  const parts = text.split(/(https?:\/\/[^\s\[\]]+)/g)
+  return parts.map((part, i) =>
+    /^https?:\/\//.test(part) ? (
+      <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="fact-source-link">
+        {part}
+      </a>
+    ) : (
+      part
+    ),
+  )
+}
 
 interface Props {
   state: Field6State
@@ -31,8 +76,9 @@ export function Step2WebFacts({ state, dispatch }: Props) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { if (state.webStatus === 'idle') fetchFacts() }, [])
 
-  const parsedFacts = state.factsText ? parseFactsText(state.factsText) : null
-  const canContinue = state.webStatus === 'ready' && state.selectedSourceUrls.size > 0
+  const factItems = state.factsText ? buildFactDisplayItems(state.factsText) : []
+  const hasFacts = factItems.some((it) => it.kind === 'fact')
+  const canContinue = state.webStatus === 'ready' && state.selectedFactIndices.size > 0
 
   return (
     <StepContainer
@@ -50,20 +96,29 @@ export function Step2WebFacts({ state, dispatch }: Props) {
         <>
           <section className="facts-section">
             <h3>Facts</h3>
-            {parsedFacts && parsedFacts.length > 0 ? (
+            {hasFacts ? (
               <ul className="checkbox-list">
-                {parsedFacts.map((fact, i) => (
-                  <li key={i} className="checkbox-list__item">
-                    <label className="checkbox-label">
-                      <input
-                        type="checkbox"
-                        checked={state.selectedFactIndices.has(i)}
-                        onChange={() => dispatch({ type: 'TOGGLE_FACT', index: i })}
-                      />
-                      <span>{fact}</span>
-                    </label>
-                  </li>
-                ))}
+                {factItems.map((item, i) => {
+                  if (item.kind === 'header') {
+                    return (
+                      <li key={i} className="checkbox-list__category-header">
+                        <strong>{item.label}</strong>
+                      </li>
+                    )
+                  }
+                  return (
+                    <li key={i} className="checkbox-list__item">
+                      <label className="checkbox-label">
+                        <input
+                          type="checkbox"
+                          checked={state.selectedFactIndices.has(item.idx)}
+                          onChange={() => dispatch({ type: 'TOGGLE_FACT', index: item.idx })}
+                        />
+                        <span>{renderTextWithLinks(item.text)}</span>
+                      </label>
+                    </li>
+                  )
+                })}
               </ul>
             ) : (
               <div>
@@ -84,38 +139,6 @@ export function Step2WebFacts({ state, dispatch }: Props) {
             )}
           </section>
 
-          <section className="sources-section">
-            <h3>Πηγές</h3>
-            {state.sources.length > 0 ? (
-              <ul className="sources-list">
-                {state.sources.map((source) => (
-                  <li key={source.url} className="source-card">
-                    <label className="checkbox-label">
-                      <input
-                        type="checkbox"
-                        checked={state.selectedSourceUrls.has(source.url)}
-                        onChange={() => dispatch({ type: 'TOGGLE_SOURCE', url: source.url })}
-                      />
-                      <div className="source-card__body">
-                        <span className="source-card__title">{source.title ?? source.url}</span>
-                        {source.snippet && <p className="source-card__snippet">{source.snippet}</p>}
-                        <a
-                          href={source.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="source-card__url"
-                        >
-                          {source.url}
-                        </a>
-                      </div>
-                    </label>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <EmptyState message="Δεν βρέθηκαν πηγές." />
-            )}
-          </section>
         </>
       )}
     </StepContainer>

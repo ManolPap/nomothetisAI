@@ -78,22 +78,29 @@ export function Step1Upload({ state, dispatch }: Props) {
           <h3>Μεταδεδομένα Νόμου</h3>
           <div className="form-grid">
             {([
-              ['title', 'Τίτλος'],
-              ['law_number', 'Αριθμός Νόμου'],
-              ['year', 'Έτος'],
+              ['topic', 'Θέμα'],
               ['ministry', 'Υπουργείο'],
-              ['fek_number', 'ΦΕΚ Αριθμός'],
-              ['fek_date', 'Ημερομηνία ΦΕΚ'],
-              ['subject', 'Θέμα'],
+              ['sector', 'Τομέας'],
+              ['measures', 'Μέτρα'],
+              ['directive', 'Οδηγία ΕΕ'],
             ] as [keyof LawMetadata, string][]).map(([key, label]) => (
               <label key={key} className="form-field">
                 <span className="form-field__label">{label}</span>
-                <input
-                  className="form-field__input"
-                  type={key === 'year' ? 'number' : 'text'}
-                  value={String(editedMetadata[key] ?? '')}
-                  onChange={(e) => handleMetadataChange(key, e.target.value)}
-                />
+                {key === 'ministry' || key === 'sector' ? (
+                  <input
+                    className="form-field__input"
+                    type="text"
+                    value={String(editedMetadata[key] ?? '')}
+                    onChange={(e) => handleMetadataChange(key, e.target.value)}
+                  />
+                ) : (
+                  <textarea
+                    className="form-field__textarea"
+                    rows={3}
+                    value={String(editedMetadata[key] ?? '')}
+                    onChange={(e) => handleMetadataChange(key, e.target.value)}
+                  />
+                )}
               </label>
             ))}
           </div>
