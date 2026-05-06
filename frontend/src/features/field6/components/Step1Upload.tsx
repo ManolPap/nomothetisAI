@@ -1,9 +1,10 @@
-import { type Dispatch, useState } from 'react'
+import { type Dispatch, useCallback, useEffect, useState } from 'react'
 import { StepHeader } from '../../../shared/ui/StepHeader'
 import { StepContainer } from '../../../shared/ui/StepContainer'
 import { FileUploader } from '../../../shared/ui/FileUploader'
 import { ErrorBanner } from '../../../shared/ui/ErrorBanner'
 import { isApiError } from '../../../shared/api/errors'
+import { useLawFiles } from '../../../app/providers/LawFilesProvider'
 import { extractMetadata } from '../api'
 import type { Field6Action, Field6State } from '../state/reducer'
 import type { LawMetadata } from '../types'
@@ -14,9 +15,11 @@ interface Props {
 }
 
 export function Step1Upload({ state, dispatch }: Props) {
+  const { finalLawFile, setFinalLawFile } = useLawFiles()
   const [editedMetadata, setEditedMetadata] = useState<LawMetadata | null>(state.metadata)
 
-  async function handleFile(file: File) {
+  const handleFile = useCallback(async (file: File) => {
+    setFinalLawFile(file)
     dispatch({ type: 'SET_FILE', file })
     dispatch({ type: 'METADATA_LOADING' })
     try {
@@ -27,7 +30,7 @@ export function Step1Upload({ state, dispatch }: Props) {
       const msg = isApiError(e) ? e.userMessage() : 'Άγνωστο σφάλμα'
       dispatch({ type: 'METADATA_ERROR', error: msg })
     }
-  }
+  }, [dispatch, setFinalLawFile])
 
   function handleMetadataChange(field: keyof LawMetadata, value: string) {
     const updated = { ...(editedMetadata ?? {}), [field]: value } as LawMetadata
@@ -37,6 +40,19 @@ export function Step1Upload({ state, dispatch }: Props) {
 
   const canContinue = state.metadataStatus === 'ready' && !!state.metadata
   const isLoading = state.metadataStatus === 'loading'
+
+  useEffect(() => {
+    if (!finalLawFile) return
+    if (!state.file || state.file.name !== finalLawFile.name || state.file.size !== finalLawFile.size || state.file.lastModified !== finalLawFile.lastModified) {
+      dispatch({ type: 'SET_FILE', file: finalLawFile })
+    }
+  }, [dispatch, finalLawFile, state.file])
+
+  useEffect(() => {
+    if (state.file && state.metadataStatus === 'idle') {
+      void handleFile(state.file)
+    }
+  }, [handleFile, state.file, state.metadataStatus])
 
   return (
     <StepContainer

@@ -11,7 +11,11 @@ export function Field23Page() {
 
   return (
     <ErrorBoundary fallbackTitle="Σφάλμα στο Πεδίο 23">
-      <div className="feature-page">
+      <div className="feature-page page-shell">
+        <header className="page-hero">
+          <p className="page-hero__eyebrow">Field 23 Workflow</p>
+          <p className="page-hero__subtitle">Σύγκριση αρχικού/τελικού νόμου με ασφαλή διάσπαση και προβολή διαφορών.</p>
+        </header>
         <h1 className="feature-page__title">Πεδίο 23 — Σύγκριση Νόμων</h1>
         {state.currentStep === 1 && <Step1Input state={state} dispatch={dispatch} />}
         {state.currentStep === 2 && <Step2Split state={state} dispatch={dispatch} />}

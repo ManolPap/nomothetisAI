@@ -1,7 +1,8 @@
-import { type Dispatch } from 'react'
+import { type Dispatch, useEffect } from 'react'
 import { StepHeader } from '../../../shared/ui/StepHeader'
 import { StepContainer } from '../../../shared/ui/StepContainer'
 import { FileUploader } from '../../../shared/ui/FileUploader'
+import { useLawFiles } from '../../../app/providers/LawFilesProvider'
 import type { Field23Action, Field23State } from '../state/reducer'
 
 interface Props {
@@ -10,7 +11,17 @@ interface Props {
 }
 
 export function Step1Input({ state, dispatch }: Props) {
+  const { initialLawFile, finalLawFile, setInitialLawFile, setFinalLawFile } = useLawFiles()
   const canContinue = !!state.initialFile && !!state.finalFile
+
+  useEffect(() => {
+    if (initialLawFile && (!state.initialFile || state.initialFile.name !== initialLawFile.name || state.initialFile.size !== initialLawFile.size || state.initialFile.lastModified !== initialLawFile.lastModified)) {
+      dispatch({ type: 'SET_INITIAL_FILE', file: initialLawFile })
+    }
+    if (finalLawFile && (!state.finalFile || state.finalFile.name !== finalLawFile.name || state.finalFile.size !== finalLawFile.size || state.finalFile.lastModified !== finalLawFile.lastModified)) {
+      dispatch({ type: 'SET_FINAL_FILE', file: finalLawFile })
+    }
+  }, [dispatch, finalLawFile, initialLawFile, state.finalFile, state.initialFile])
 
   return (
     <StepContainer
@@ -29,7 +40,10 @@ export function Step1Input({ state, dispatch }: Props) {
           <h3>Αρχικός Νόμος</h3>
           <FileUploader
             label="Επιλέξτε PDF αρχικού νόμου"
-            onFile={(f) => dispatch({ type: 'SET_INITIAL_FILE', file: f })}
+            onFile={(f) => {
+              setInitialLawFile(f)
+              dispatch({ type: 'SET_INITIAL_FILE', file: f })
+            }}
             currentFile={state.initialFile}
           />
         </div>
@@ -37,7 +51,10 @@ export function Step1Input({ state, dispatch }: Props) {
           <h3>Τελικός Νόμος</h3>
           <FileUploader
             label="Επιλέξτε PDF τελικού νόμου"
-            onFile={(f) => dispatch({ type: 'SET_FINAL_FILE', file: f })}
+            onFile={(f) => {
+              setFinalLawFile(f)
+              dispatch({ type: 'SET_FINAL_FILE', file: f })
+            }}
             currentFile={state.finalFile}
           />
         </div>
