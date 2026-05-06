@@ -1,6 +1,6 @@
 """Eurostat service για το Πεδίο 9 — φέρνει χρονοσειρά για Ελλάδα."""
 
-import requests
+import requests  # type: ignore[import-untyped]
 from langchain_core.messages import HumanMessage, SystemMessage
 
 from app.features.field_9.config import (
@@ -13,6 +13,7 @@ from app.features.field_9.prompt import (
     SUGGEST_INDICATORS_SYSTEM,
 )
 from app.features.field_9.schemas import IndicatorData, IndicatorSuggestion, YearlyValue
+from app.features.field_9.services.llm_service import extract_llm_content
 
 
 def get_five_year_range(reference_year: int) -> list[int]:
@@ -43,12 +44,7 @@ def suggest_indicators(sector: str, law_title: str) -> list[IndicatorSuggestion]
         )),
     ])
 
-    content = response.content
-    if isinstance(content, list):
-        item = content[0]
-        raw = (item["text"] if isinstance(item, dict) else item.text).strip()
-    else:
-        raw = content.strip()
+    raw = extract_llm_content(response).strip()
     print(f"  LLM πρότεινε: {raw}")
 
     suggestions = []

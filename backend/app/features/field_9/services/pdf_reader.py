@@ -2,7 +2,7 @@
 
 import re
 
-import fitz  # type: ignore[import-untyped]
+import fitz
 
 
 def extract_text_from_pdf(pdf_path: str) -> str:
