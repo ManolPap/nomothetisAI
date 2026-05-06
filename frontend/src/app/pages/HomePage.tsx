@@ -27,10 +27,11 @@ export function HomePage() {
   const canEnterField23 = canProceed || field23Card.hasSavedSession
 
   const workflows = [
-    { to: '/field6', title: 'Πεδίο 6', description: 'Μεταδεδομένα, web facts, Eurostat και τελική σύνθεση κειμένου.' },
-    { to: '/field9', title: 'Πεδίο 9', description: 'Εξαγωγή τομέα, επιλογή δεικτών και πίνακας τιμών στόχων.' },
-    { to: '/field23', title: 'Πεδίο 23', description: 'Split άρθρων, σύγκριση διαφορών και προβολή attribution.' },
-  ]
+    { to: '/field4', title: 'Πεδίο 4', description: 'Νομοθετικές αναφορές και ανάλυση από το ανεβασμένο κείμενο.', requiresBothPdfs: false },
+    { to: '/field6', title: 'Πεδίο 6', description: 'Μεταδεδομένα, web facts, Eurostat και τελική σύνθεση κειμένου.', requiresBothPdfs: true },
+    { to: '/field9', title: 'Πεδίο 9', description: 'Εξαγωγή τομέα, επιλογή δεικτών και πίνακας τιμών στόχων.', requiresBothPdfs: true },
+    { to: '/field23', title: 'Πεδίο 23', description: 'Split άρθρων, σύγκριση διαφορών και προβολή attribution.', requiresBothPdfs: true },
+  ] as const
 
   return (
     <section className="home-page page-shell">
@@ -74,18 +75,19 @@ export function HomePage() {
       <section className="workflow-grid" aria-label="Διαθέσιμες ροές εργασίας">
         {workflows.map((workflow) => {
           const isField23 = workflow.to === '/field23'
-          const canStart = isField23 ? canEnterField23 : canProceed
+          const needsPdfs = workflow.requiresBothPdfs
+          const canStart = isField23 ? canEnterField23 : needsPdfs ? canProceed : true
           if (!isField23) {
             return (
               <article key={workflow.to} className="workflow-card">
                 <h3>{workflow.title}</h3>
                 <p>{workflow.description}</p>
                 <Link
-                  className={`btn btn-primary${!canProceed ? ' btn-disabled' : ''}`}
+                  className={`btn btn-primary${needsPdfs && !canProceed ? ' btn-disabled' : ''}`}
                   to={workflow.to}
-                  aria-disabled={!canProceed}
+                  aria-disabled={needsPdfs && !canProceed}
                   onClick={(e) => {
-                    if (!canProceed) e.preventDefault()
+                    if (needsPdfs && !canProceed) e.preventDefault()
                   }}
                 >
                   Εκκίνηση ροής
