@@ -1,9 +1,9 @@
 from fastapi import APIRouter
 
 from app.features.field_4.router import router as field_4_router
-from app.features.field_23.router import router as field_23_router
 from app.features.field_6.router import router as field_6_router
 from app.features.field_9.router import router as field_9_router
+from app.features.field_23.router import router as field_23_router
 
 router = APIRouter(prefix="/api")
 
