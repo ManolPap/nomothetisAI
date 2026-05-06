@@ -1,7 +1,14 @@
 import { describe, expect, it } from 'vitest'
+import type { LawMetadata } from '../../types'
 import { field6Reducer, initialField6State } from '../reducer'
 
-const mockMetadata = { title: 'Test Law' }
+const mockMetadata: LawMetadata = {
+  topic: 'Δοκιμή',
+  ministry: '',
+  sector: '',
+  measures: '',
+  directive: '',
+}
 const mockFile = new File(['pdf'], 'test.pdf', { type: 'application/pdf' })
 
 describe('field6Reducer', () => {
@@ -33,7 +40,10 @@ describe('field6Reducer', () => {
       synthesisStatus: 'ready' as const,
       synthesisText: 'output',
     }
-    const next = field6Reducer(stateWithAll, { type: 'UPDATE_METADATA', metadata: { title: 'Updated' } })
+    const next = field6Reducer(stateWithAll, {
+      type: 'UPDATE_METADATA',
+      metadata: { ...mockMetadata, topic: 'Ενημερωμένο' },
+    })
     expect(next.webStatus).toBe('idle')
     expect(next.eurostatStatus).toBe('idle')
     expect(next.synthesisStatus).toBe('idle')
