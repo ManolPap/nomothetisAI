@@ -1,20 +1,19 @@
 # ruff: noqa: E501
 """Σταθερές και αρχικοποίηση clients για το Πεδίο 9."""
 
-import os
 from functools import lru_cache
 
-from dotenv import load_dotenv
 from langchain_google_genai import ChatGoogleGenerativeAI
 
-load_dotenv()
+from app.core.config import settings
+
 
 @lru_cache(maxsize=1)
 def get_llm() -> ChatGoogleGenerativeAI:
     """Gemini 3.1 Flash Lite για όλες τις κλήσεις του Πεδίου 9."""
     return ChatGoogleGenerativeAI(
         model="gemini-3.1-flash-lite-preview",
-        google_api_key=os.getenv("GOOGLE_API_KEY"),
+        google_api_key=settings.feature.field_6_9_google_api_key.get_secret_value() if settings.feature.field_6_9_google_api_key else None,
         temperature=0,
     )
 
