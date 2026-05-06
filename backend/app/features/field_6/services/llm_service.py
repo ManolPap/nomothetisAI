@@ -223,7 +223,7 @@ def step6_synthesize_field6(
     print("ΒΗΜΑ 6: Σύνθεση Πεδίου 6 (Gemini 2.5 Flash)")
     print("=" * 60)
 
-    response = get_llm_synthesis().invoke([
+    messages = [
         SystemMessage(content=SYNTHESIS_SYSTEM),
         HumanMessage(content=build_synthesis_human(
             topic=metadata["topic"],
@@ -234,7 +234,12 @@ def step6_synthesize_field6(
             eurostat_text=eurostat_text,
             selected_sources=selected_sources,
         )),
-    ])
+    ]
+    try:
+        response = get_llm_synthesis().invoke(messages)
+    except Exception as e:
+        print(f"⚠️ Fallback σε Flash Lite για σύνθεση (σφάλμα: {e})")
+        response = get_llm_fast().invoke(messages)
 
     text = extract_llm_content(response)
     word_count = len(text.split())

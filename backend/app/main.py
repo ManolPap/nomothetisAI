@@ -18,8 +18,6 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
     app.include_router(health_router)
-    app.include_router(field6_router)
-    app.include_router(field9_router)
     app.include_router(api_router)
     return app
 

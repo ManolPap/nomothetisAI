@@ -33,7 +33,7 @@ from app.features.field_6.services.web_search import (
     step5b_eurostat_for_countries,
 )
 
-router = APIRouter(prefix="/field6", tags=["field6"])
+router = APIRouter()
 
 
 @router.post(
