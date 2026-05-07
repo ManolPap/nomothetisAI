@@ -521,6 +521,52 @@ a {
   gap: 0.9rem;
 }
 
+.home-page-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.home-page-section {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  padding: 0.95rem;
+}
+
+.home-page-section__header {
+  margin-bottom: 0.8rem;
+}
+
+.home-page-section__code {
+  margin: 0 0 0.2rem;
+  font-size: 0.76rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.home-page-section__header h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.home-page-section__empty {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.home-page-section .workflow-grid {
+  grid-template-columns: 1fr;
+}
+
+.home-page-section .workflow-card {
+  min-height: 153px;
+}
+
 .workflow-card h3 {
   margin: 0 0 0.3rem;
 }
