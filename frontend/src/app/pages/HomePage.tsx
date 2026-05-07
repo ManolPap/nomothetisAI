@@ -53,8 +53,25 @@ export function HomePage() {
     { to: '/field4', title: 'Πεδίο 4', description: 'Νομοθετικές αναφορές και ανάλυση από το ανεβασμένο κείμενο.', requiresBothPdfs: false },
     { to: '/field6', title: 'Πεδίο 6', description: 'Μεταδεδομένα, web facts, Eurostat και τελική σύνθεση κειμένου.', requiresBothPdfs: true },
     { to: '/field9', title: 'Πεδίο 9', description: 'Εξαγωγή τομέα, επιλογή δεικτών και πίνακας τιμών στόχων.', requiresBothPdfs: true },
-    { to: '/field23', title: 'Πεδίο 23', description: 'Split άρθρων, σύγκριση διαφορών και προβολή attribution.', requiresBothPdfs: true },
+    { to: '/field23', title: 'Πεδίο 23', description: 'Σχόλια στο πλαίσιο της διαβούλευσης μέσω της ηλεκτρονικής πλατφόρμας www.opengov.gr.', requiresBothPdfs: true },
   ] as const
+  type Workflow = typeof workflows[number]
+  type WorkflowRoute = Workflow['to']
+  const workflowByRoute: Record<WorkflowRoute, Workflow> = workflows.reduce((acc, workflow) => {
+    acc[workflow.to] = workflow
+    return acc
+  }, {} as Record<WorkflowRoute, Workflow>)
+
+  const sections: Array<{ code: string; title: string; routes: WorkflowRoute[] }> = [
+    { code: 'A', title: 'ΑΙΤΙΟΛΟΓΙΚΗ ΕΚΘΕΣΗ', routes: ['/field4', '/field6', '/field9'] },
+    { code: 'B', title: 'ΕΚΘΕΣΗ ΤΟΥ ΑΡΘΡΟΥ 75 ΠΑΡ. 1 & 2 ΤΟΥ ΣΥΝΤΑΓΜΑΤΟΣ', routes: [] },
+    { code: 'Γ', title: 'ΕΚΘΕΣΗ ΤΟΥ ΑΡΘΡΟΥ 75 ΠΑΡ. 3 ΤΟΥ ΣΥΝΤΑΓΜΑΤΟΣ', routes: [] },
+    { code: 'Δ', title: 'ΕΚΘΕΣΗ ΓΕΝΙΚΩΝ ΣΥΝΕΠΕΙΩΝ', routes: [] },
+    { code: 'Ε', title: 'ΕΚΘΕΣΗ ΔΙΑΒΟΥΛΕΥΣΗΣ', routes: ['/field23'] },
+    { code: 'ΣΤ', title: 'ΕΚΘΕΣΗ ΝΟΜΙΜΟΤΗΤΑΣ', routes: [] },
+    { code: 'Ζ', title: 'ΠΙΝΑΚΑΣ ΤΡΟΠΟΠΟΙΟΥΜΕΝΩΝ Ή ΚΑΤΑΡΓΟΥΜΕΝΩΝ ΔΙΑΤΑΞΕΩΝ', routes: [] },
+    { code: 'Η', title: 'ΕΚΘΕΣΗ ΕΦΑΡΜΟΓΗΣ ΤΗΣ ΡΥΘΜΙΣΗΣ', routes: [] },
+  ]
 
   function renderWorkflowCard(workflow: typeof workflows[number]) {
     const { to, title, description, requiresBothPdfs } = workflow
@@ -192,34 +209,30 @@ export function HomePage() {
   return (
     <section className="home-page page-shell">
       <header className="page-hero">
-        <p className="page-hero__eyebrow">Unified Human-in-the-Loop Workflow</p>
-        <h1 className="feature-page__title">Κεντρικό Ανέβασμα Νόμων</h1>
+        <p className="page-hero__eyebrow">Ελληνική Νομοθεσία και Ψηφιακή Υποστήριξη</p>
+        <h1 className="feature-page__title">Ψηφιακός Βοηθός Ανάλυσης Συνεπειών Ρύθμισης</h1>
         <p className="home-page__subtitle">
-          Ανεβάστε μία φορά τον αρχικό και τον τελικό νόμο. Τα αρχεία επαναχρησιμοποιούνται
-          με ασφαλή και προβλέψιμο τρόπο στα `field6`, `field9` και `field23`.
+          Ανεβάστε μία φορά το σχέδιο νόμου προς διαβούλευση και το σχέδιο νόμου για την αιτιολογική έκθεση. Στην συνέχεια, 
+          εκκινήστε τις ροές και ο βοηθός θα σας καθοδηγήσει στην συμπλήρωση της αιτιολογικής έκθεσης.
         </p>
       </header>
 
       <div className="step-container">
         <div className="step-content">
-          <h2 className="step-title">1. Επιλογή αρχείων εισόδου</h2>
-          <p className="step-description">
-            Οι αλλαγές στα αρχεία ακυρώνουν αυτόματα downstream δεδομένα, ώστε να μην
-            χρησιμοποιούνται παλιά αποτελέσματα.
-          </p>
+          <h2 className="step-title">Επιλογή αρχείων εισόδου</h2>
           <div className="file-pair">
             <div className="file-pair__item">
-              <h3>Αρχικός Νόμος</h3>
+              <h3>Σχέδιο νόμου προς διαβούλευση</h3>
               <FileUploader
-                label="Επιλέξτε PDF αρχικού νόμου"
+                label="Επιλέξτε PDF σχέδιου νόμου προς διαβούλευση"
                 onFile={setInitialLawFile}
                 currentFile={initialLawFile}
               />
             </div>
             <div className="file-pair__item">
-              <h3>Τελικός Νόμος</h3>
+              <h3>Σχέδιο νόμου για την αιτιολογική έκθεση</h3>
               <FileUploader
-                label="Επιλέξτε PDF τελικού νόμου"
+                label="Επιλέξτε PDF σχέδιου νόμου για την αιτιολογική έκθεση"
                 onFile={setFinalLawFile}
                 currentFile={finalLawFile}
               />
@@ -228,13 +241,29 @@ export function HomePage() {
         </div>
       </div>
 
-      <section className="workflow-grid" aria-label="Διαθέσιμες ροές εργασίας">
-        {workflows.map((workflow) => renderWorkflowCard(workflow))}
+      <section className="home-page-sections" aria-label="Ενότητες ανάλυσης συνεπειών ρύθμισης">
+        {sections.map((section) => (
+          <article key={section.code} className="home-page-section">
+            <header className="home-page-section__header">
+              <p className="home-page-section__code">{section.code}</p>
+              <h2>{section.title}</h2>
+            </header>
+            {section.routes.length > 0 ? (
+              <div className="workflow-grid" aria-label={`Ροές για την ενότητα ${section.code}`}>
+                {section.routes.map((route) => renderWorkflowCard(workflowByRoute[route]))}
+              </div>
+            ) : (
+              <p className="home-page-section__empty">
+                Δεν υπάρχει ακόμα διαθέσιμη ροή για αυτή την ενότητα.
+              </p>
+            )}
+          </article>
+        ))}
       </section>
 
       {!canProceed && (
         <p className="hint-text" role="status">
-          Απαιτούνται και τα δύο αρχεία PDF για τις ροές 6 και 9.
+          Απαιτούνται και τα δύο αρχεία PDF για την συμπλήρωση του πεδίου 23.
           {(field6Card.hasSavedSession || field9Card.hasSavedSession || field23Card.hasSavedSession) &&
             ' Μπορείτε να συνεχίσετε την αποθηκευμένη σας πρόοδο.'}
         </p>
