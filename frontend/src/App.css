@@ -1264,3 +1264,287 @@ a {
   color: #0b6a45;
   font-weight: 600;
 }
+
+/* ── Field 7 — SDG classification ── */
+.btn-field7-complete {
+  background: #0b6a45;
+  color: #fff;
+  border-color: #08603d;
+}
+.btn-field7-complete:hover:not(:disabled) {
+  background: #095236;
+}
+.btn-field7-home-done {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #15803d;
+  color: #fff;
+  border-color: #116532;
+}
+.btn-field7-home-done:hover:not(:disabled) {
+  background: #0f6a32;
+}
+.workflow-card--field7 .workflow-card__reset {
+  display: block;
+  width: 100%;
+  margin-top: 0.5rem;
+  text-align: center;
+}
+
+.field7-review {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+.field7-review__summary {
+  margin: 0;
+  padding: 0.65rem 0.85rem;
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.field7-cards {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+@media (min-width: 880px) {
+  .field7-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.field7-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1rem 1.1rem 1.1rem;
+  box-shadow: var(--shadow);
+  transition: 0.18s ease;
+}
+.field7-card--accepted {
+  border-color: #15803d;
+  background: linear-gradient(180deg, #f1faf3 0%, #ffffff 70%);
+}
+.field7-card--rejected {
+  border-color: #d1d5db;
+  background: #f5f5f7;
+  opacity: 0.78;
+}
+.field7-card__header {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+.field7-card__title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.field7-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  flex: 0 0 2.4rem;
+  border-radius: 8px;
+  font-weight: 800;
+  font-size: 1rem;
+  color: #fff;
+  background: #555;
+  letter-spacing: 0.02em;
+}
+
+/* Επίσημα χρώματα ΟΗΕ για τους 17 SDGs */
+.field7-badge--sdg-1  { background: #e5243b; }
+.field7-badge--sdg-2  { background: #dda63a; }
+.field7-badge--sdg-3  { background: #4c9f38; }
+.field7-badge--sdg-4  { background: #c5192d; }
+.field7-badge--sdg-5  { background: #ff3a21; }
+.field7-badge--sdg-6  { background: #26bde2; }
+.field7-badge--sdg-7  { background: #fcc30b; color: #1f2937; }
+.field7-badge--sdg-8  { background: #a21942; }
+.field7-badge--sdg-9  { background: #fd6925; }
+.field7-badge--sdg-10 { background: #dd1367; }
+.field7-badge--sdg-11 { background: #fd9d24; }
+.field7-badge--sdg-12 { background: #bf8b2e; }
+.field7-badge--sdg-13 { background: #3f7e44; }
+.field7-badge--sdg-14 { background: #0a97d9; }
+.field7-badge--sdg-15 { background: #56c02b; }
+.field7-badge--sdg-16 { background: #00689d; }
+.field7-badge--sdg-17 { background: #19486a; }
+
+.field7-subtargets {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+.field7-subtarget {
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.6rem 0.75rem;
+}
+.field7-subtarget__head {
+  margin: 0 0 0.35rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+.field7-subtarget__code {
+  font-weight: 700;
+  font-size: 0.82rem;
+  color: var(--primary-strong);
+  background: #e5edff;
+  border-radius: 6px;
+  padding: 0.12rem 0.45rem;
+}
+.field7-subtarget__title {
+  font-size: 0.9rem;
+  color: var(--text);
+  font-weight: 500;
+  line-height: 1.35;
+}
+.field7-subtarget__reasoning {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--muted);
+  line-height: 1.45;
+  font-style: italic;
+}
+
+.field7-card__actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+.btn-field7-accept,
+.btn-field7-reject {
+  flex: 1;
+  border-radius: 999px;
+  font-weight: 600;
+  padding: 0.55rem 0.95rem;
+  font-size: 0.9rem;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  transition: 0.15s ease;
+}
+.btn-field7-accept:hover { background: #ecfdf3; border-color: #15803d; color: #0b6a45; }
+.btn-field7-reject:hover { background: #fef2f2; border-color: #c73939; color: #c73939; }
+.btn-field7-accept.is-active {
+  background: #15803d;
+  color: #fff;
+  border-color: #116532;
+}
+.btn-field7-reject.is-active {
+  background: #c73939;
+  color: #fff;
+  border-color: #a82828;
+}
+
+.field7-template {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1.1rem 1.3rem 1.25rem;
+  box-shadow: var(--shadow);
+  margin-top: 0.5rem;
+}
+.field7-template__heading {
+  margin: 0 0 0.85rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text);
+}
+.field7-checklist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+.field7-checklist__item {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.5rem 0.7rem;
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.field7-checklist__box {
+  font-size: 1.1rem;
+  color: #0b6a45;
+  font-weight: 700;
+}
+.field7-checklist__label {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+}
+.field7-checklist__id {
+  font-weight: 700;
+  font-size: 0.82rem;
+  color: #fff;
+  background: #444;
+  border-radius: 6px;
+  padding: 0.15rem 0.5rem;
+}
+.field7-checklist__item--sdg-1  .field7-checklist__id { background: #e5243b; }
+.field7-checklist__item--sdg-2  .field7-checklist__id { background: #dda63a; }
+.field7-checklist__item--sdg-3  .field7-checklist__id { background: #4c9f38; }
+.field7-checklist__item--sdg-4  .field7-checklist__id { background: #c5192d; }
+.field7-checklist__item--sdg-5  .field7-checklist__id { background: #ff3a21; }
+.field7-checklist__item--sdg-6  .field7-checklist__id { background: #26bde2; }
+.field7-checklist__item--sdg-7  .field7-checklist__id { background: #fcc30b; color: #1f2937; }
+.field7-checklist__item--sdg-8  .field7-checklist__id { background: #a21942; }
+.field7-checklist__item--sdg-9  .field7-checklist__id { background: #fd6925; }
+.field7-checklist__item--sdg-10 .field7-checklist__id { background: #dd1367; }
+.field7-checklist__item--sdg-11 .field7-checklist__id { background: #fd9d24; }
+.field7-checklist__item--sdg-12 .field7-checklist__id { background: #bf8b2e; }
+.field7-checklist__item--sdg-13 .field7-checklist__id { background: #3f7e44; }
+.field7-checklist__item--sdg-14 .field7-checklist__id { background: #0a97d9; }
+.field7-checklist__item--sdg-15 .field7-checklist__id { background: #56c02b; }
+.field7-checklist__item--sdg-16 .field7-checklist__id { background: #00689d; }
+.field7-checklist__item--sdg-17 .field7-checklist__id { background: #19486a; }
+.field7-checklist__title {
+  font-size: 0.95rem;
+  color: var(--text);
+}
+.field7-template__actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.85rem;
+}
+.field7-step2-complete {
+  margin-top: 1rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--border);
+}
+.field7-step2-complete__done {
+  margin: 0 0 0.65rem;
+  color: #0b6a45;
+  font-weight: 600;
+}

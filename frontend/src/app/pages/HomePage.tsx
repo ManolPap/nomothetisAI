@@ -13,6 +13,11 @@ import {
   readField6HomeMeta,
 } from '../../features/field6/state/persist'
 import {
+  clearField7Persisted,
+  field7PersistEventName,
+  readField7HomeMeta,
+} from '../../features/field7/state/persist'
+import {
   clearField9Persisted,
   field9PersistEventName,
   readField9HomeMeta,
@@ -23,17 +28,21 @@ export function HomePage() {
   const canProceed = Boolean(initialLawFile && finalLawFile)
   const [field23Card, setField23Card] = useState(() => readField23HomeMeta())
   const [field6Card, setField6Card] = useState(() => readField6HomeMeta())
+  const [field7Card, setField7Card] = useState(() => readField7HomeMeta())
   const [field9Card, setField9Card] = useState(() => readField9HomeMeta())
 
   useEffect(() => {
     const refresh23 = () => setField23Card(readField23HomeMeta())
     const refresh6 = () => setField6Card(readField6HomeMeta())
+    const refresh7 = () => setField7Card(readField7HomeMeta())
     const refresh9 = () => setField9Card(readField9HomeMeta())
 
     window.addEventListener(field23PersistEventName(), refresh23)
     window.addEventListener('storage', refresh23)
     window.addEventListener(field6PersistEventName(), refresh6)
     window.addEventListener('storage', refresh6)
+    window.addEventListener(field7PersistEventName(), refresh7)
+    window.addEventListener('storage', refresh7)
     window.addEventListener(field9PersistEventName(), refresh9)
     window.addEventListener('storage', refresh9)
 
@@ -42,6 +51,8 @@ export function HomePage() {
       window.removeEventListener('storage', refresh23)
       window.removeEventListener(field6PersistEventName(), refresh6)
       window.removeEventListener('storage', refresh6)
+      window.removeEventListener(field7PersistEventName(), refresh7)
+      window.removeEventListener('storage', refresh7)
       window.removeEventListener(field9PersistEventName(), refresh9)
       window.removeEventListener('storage', refresh9)
     }
@@ -52,6 +63,7 @@ export function HomePage() {
   const workflows = [
     { to: '/field4', title: 'Πεδίο 4', description: 'Νομοθετικές αναφορές και ανάλυση από το ανεβασμένο κείμενο.', requiresBothPdfs: false },
     { to: '/field6', title: 'Πεδίο 6', description: 'Μεταδεδομένα, web facts, Eurostat και τελική σύνθεση κειμένου.', requiresBothPdfs: true },
+    { to: '/field7', title: 'Πεδίο 7', description: 'Αντιστοίχιση του νόμου με τους 17 Στόχους Βιώσιμης Ανάπτυξης (SDGs) του ΟΗΕ.', requiresBothPdfs: false },
     { to: '/field9', title: 'Πεδίο 9', description: 'Εξαγωγή τομέα, επιλογή δεικτών και πίνακας τιμών στόχων.', requiresBothPdfs: true },
     { to: '/field23', title: 'Πεδίο 23', description: 'Σχόλια στο πλαίσιο της διαβούλευσης μέσω της ηλεκτρονικής πλατφόρμας www.opengov.gr.', requiresBothPdfs: true },
   ] as const
@@ -63,7 +75,7 @@ export function HomePage() {
   }, {} as Record<WorkflowRoute, Workflow>)
 
   const sections: Array<{ code: string; title: string; routes: WorkflowRoute[] }> = [
-    { code: 'A', title: 'ΑΙΤΙΟΛΟΓΙΚΗ ΕΚΘΕΣΗ', routes: ['/field4', '/field6', '/field9'] },
+    { code: 'A', title: 'ΑΙΤΙΟΛΟΓΙΚΗ ΕΚΘΕΣΗ', routes: ['/field4', '/field6', '/field7', '/field9'] },
     { code: 'B', title: 'ΕΚΘΕΣΗ ΤΟΥ ΑΡΘΡΟΥ 75 ΠΑΡ. 1 & 2 ΤΟΥ ΣΥΝΤΑΓΜΑΤΟΣ', routes: [] },
     { code: 'Γ', title: 'ΕΚΘΕΣΗ ΤΟΥ ΑΡΘΡΟΥ 75 ΠΑΡ. 3 ΤΟΥ ΣΥΝΤΑΓΜΑΤΟΣ', routes: [] },
     { code: 'Δ', title: 'ΕΚΘΕΣΗ ΓΕΝΙΚΩΝ ΣΥΝΕΠΕΙΩΝ', routes: [] },
@@ -109,6 +121,44 @@ export function HomePage() {
               onClick={(e) => { if (needsPdfs && !canProceed) e.preventDefault() }}
             >
               {field6Card.hasSavedSession ? 'Συνέχιση ροής' : 'Εκκίνηση ροής'}
+            </Link>
+          )}
+        </article>
+      )
+    }
+
+    if (to === '/field7') {
+      const canEnter = !needsPdfs || canProceed || field7Card.hasSavedSession
+      return (
+        <article key={to} className="workflow-card workflow-card--field7">
+          <h3>{title}</h3>
+          <p>{description}</p>
+          {field7Card.flowCompleted ? (
+            <>
+              <Link
+                className={`btn btn-field7-home-done${!canEnter ? ' btn-disabled' : ''}`}
+                to={to}
+                aria-disabled={!canEnter}
+                onClick={(e) => { if (!canEnter) e.preventDefault() }}
+              >
+                Ολοκληρώθηκε
+              </Link>
+              <button
+                type="button"
+                className="btn btn-ghost workflow-card__reset"
+                onClick={() => clearField7Persisted()}
+              >
+                Επαναφορά ροής
+              </button>
+            </>
+          ) : (
+            <Link
+              className={`btn btn-primary${needsPdfs && !canProceed ? ' btn-disabled' : ''}`}
+              to={to}
+              aria-disabled={needsPdfs && !canProceed}
+              onClick={(e) => { if (needsPdfs && !canProceed) e.preventDefault() }}
+            >
+              {field7Card.hasSavedSession ? 'Συνέχιση ροής' : 'Εκκίνηση ροής'}
             </Link>
           )}
         </article>
