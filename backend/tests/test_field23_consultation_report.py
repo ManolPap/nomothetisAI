@@ -7,12 +7,12 @@ from pydantic import SecretStr
 
 os.environ.setdefault("FEATURE_FIELD_23_LEGAL_ANALYZER_CACHE_DIR", "./.tmp/llm_cache_tests")
 
-from app.main import create_app
 from app.features.field_23.schemas import GenerateConsultationReportRequest
 from app.features.field_23.services.comments.consultation_report import (
     _SummaryOut,
     generate_consultation_report,
 )
+from app.main import create_app
 
 
 class ConsultationReportEndpointTests(unittest.TestCase):

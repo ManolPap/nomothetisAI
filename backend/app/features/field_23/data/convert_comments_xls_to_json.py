@@ -21,7 +21,8 @@ def _pick_column(headers: list[str], candidates: tuple[str, ...], label: str) ->
     available = ", ".join(headers)
     expected = ", ".join(candidates)
     raise ValueError(
-        f"Could not find '{label}' column. Expected one of: [{expected}]. Available headers: [{available}]"
+        f"Could not find '{label}' column. Expected one of: [{expected}]. "
+        f"Available headers: [{available}]"
     )
 
 
@@ -111,7 +112,11 @@ def convert_comments(
     )
 
     id_idx = _pick_column(headers, tuple(c for c in id_candidates if c), "id")
-    article_idx = _pick_column(headers, tuple(c for c in article_candidates if c), "target_article_number")
+    article_idx = _pick_column(
+        headers,
+        tuple(c for c in article_candidates if c),
+        "target_article_number",
+    )
     text_idx = _pick_column(headers, tuple(c for c in text_candidates if c), "text")
     participant_idx = _pick_column(
         headers,

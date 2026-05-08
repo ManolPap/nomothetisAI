@@ -69,7 +69,9 @@ def _canonical_participant_mapping() -> dict[str, str]:
     }
 
 
-def _dedupe_comments_by_id(comments: list[ConsultationReportCommentIn]) -> list[ConsultationReportCommentIn]:
+def _dedupe_comments_by_id(
+    comments: list[ConsultationReportCommentIn],
+) -> list[ConsultationReportCommentIn]:
     # Keep first seen id for stable deterministic behavior.
     seen: set[str] = set()
     out: list[ConsultationReportCommentIn] = []
@@ -100,7 +102,8 @@ def _validate_request_payload(request: GenerateConsultationReportRequest) -> Non
                 raise ConsultationReportValidationError(f"Άγνωστο comment_id: {cid}")
             if canonical_article != article_number:
                 raise ConsultationReportValidationError(
-                    f"Το comment_id {cid} ανήκει στο άρθρο {canonical_article}, όχι στο {article_number}."
+                    f"Το comment_id {cid} ανήκει στο άρθρο {canonical_article}, "
+                    f"όχι στο {article_number}."
                 )
             has_actionable = True
 
@@ -123,8 +126,16 @@ async def _llm_summarize_article(
     article: ConsultationReportItemIn,
     model_name: str,
 ) -> _SummaryOut:
-    adopted = [c.rationale_el.strip() for c in article.comments if c.adopted and c.rationale_el.strip()]
-    not_adopted = [c.rationale_el.strip() for c in article.comments if (not c.adopted) and c.rationale_el.strip()]
+    adopted = [
+        c.rationale_el.strip()
+        for c in article.comments
+        if c.adopted and c.rationale_el.strip()
+    ]
+    not_adopted = [
+        c.rationale_el.strip()
+        for c in article.comments
+        if (not c.adopted) and c.rationale_el.strip()
+    ]
     llm = ChatGoogleGenerativeAI(
         model=model_name,
         google_api_key=(
@@ -143,7 +154,7 @@ async def _llm_summarize_article(
         f"article_number: {article.article_number}\n"
         f"article_title: {article.article_title}\n"
         f"adopted_rationales:\n- " + "\n- ".join(adopted or [""]) + "\n\n"
-        f"not_adopted_rationales:\n- " + "\n- ".join(not_adopted or [""])
+        "not_adopted_rationales:\n- " + "\n- ".join(not_adopted or [""])
     )
     async with _LLM_SEM:
         raw = await llm.ainvoke(prompt)
@@ -194,9 +205,14 @@ def _compose_final_preview(
         f"Αριθμός συμμετασχόντων: {totals.participants_total}",
     ]
     for section in articles:
+        adopted_n = section.adopted_count
+        not_adopted_n = section.not_adopted_count
         lines = [
             f"Άρθρο {section.article_number} - {section.article_title}",
-            f"Σχόλια: {section.comment_count} (υιοθετήθηκαν: {section.adopted_count}, μη υιοθετήθηκαν: {section.not_adopted_count})",
+            (
+                f"Σχόλια: {section.comment_count} "
+                f"(υιοθετήθηκαν: {adopted_n}, μη υιοθετήθηκαν: {not_adopted_n})"
+            ),
         ]
         if section.adopted_summary:
             lines.append(f"Υιοθετήθηκαν: {section.adopted_summary}")

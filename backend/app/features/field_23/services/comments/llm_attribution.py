@@ -37,7 +37,7 @@ def _estimate_tokens(text: str) -> int:
 class _LLMContributionsPayload(BaseModel):
     """Μορφή structured output από το Gemini."""
 
-    contributions: list["_LLMContributionJudgement"] = Field(
+    contributions: list[_LLMContributionJudgement] = Field(
         ...,
         description=(
             "Μία γραμμή ανά σχόλιο· τα comment_id πρέπει να ταιριάζουν ακριβώς με τα δοθέντα."
