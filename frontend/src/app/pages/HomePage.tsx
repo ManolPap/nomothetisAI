@@ -59,13 +59,19 @@ export function HomePage() {
   }, [])
 
   const canEnterField23 = canProceed || field23Card.hasSavedSession
+  const hasInputFiles = Boolean(initialLawFile || finalLawFile)
+
+  function clearInputFiles() {
+    setInitialLawFile(null)
+    setFinalLawFile(null)
+  }
 
   const workflows = [
-    { to: '/field4', title: 'Πεδίο 4', description: 'Νομοθετικές αναφορές και ανάλυση από το ανεβασμένο κείμενο.', requiresBothPdfs: false },
-    { to: '/field6', title: 'Πεδίο 6', description: 'Μεταδεδομένα, web facts, Eurostat και τελική σύνθεση κειμένου.', requiresBothPdfs: true },
-    { to: '/field7', title: 'Πεδίο 7', description: 'Αντιστοίχιση του νόμου με τους 17 Στόχους Βιώσιμης Ανάπτυξης (SDGs) του ΟΗΕ.', requiresBothPdfs: false },
-    { to: '/field9', title: 'Πεδίο 9', description: 'Εξαγωγή τομέα, επιλογή δεικτών και πίνακας τιμών στόχων.', requiresBothPdfs: true },
-    { to: '/field23', title: 'Πεδίο 23', description: 'Σχόλια στο πλαίσιο της διαβούλευσης μέσω της ηλεκτρονικής πλατφόρμας www.opengov.gr.', requiresBothPdfs: true },
+    { to: '/field4', title: 'Πεδίο 4', description: 'Νομοθετικές αναφορές και ανάλυση από το ανεβασμένο κείμενο.', requiresBothPdfs: false, requiresFinalPdf: true },
+    { to: '/field6', title: 'Πεδίο 6', description: 'Μεταδεδομένα, web facts, Eurostat και τελική σύνθεση κειμένου.', requiresBothPdfs: true, requiresFinalPdf: false },
+    { to: '/field7', title: 'Πεδίο 7', description: 'Αντιστοίχιση του νόμου με τους 17 Στόχους Βιώσιμης Ανάπτυξης (SDGs) του ΟΗΕ.', requiresBothPdfs: false, requiresFinalPdf: false },
+    { to: '/field9', title: 'Πεδίο 9', description: 'Εξαγωγή τομέα, επιλογή δεικτών και πίνακας τιμών στόχων.', requiresBothPdfs: true, requiresFinalPdf: false },
+    { to: '/field23', title: 'Πεδίο 23', description: 'Σχόλια στο πλαίσιο της διαβούλευσης μέσω της ηλεκτρονικής πλατφόρμας www.opengov.gr.', requiresBothPdfs: true, requiresFinalPdf: false },
   ] as const
   type Workflow = typeof workflows[number]
   type WorkflowRoute = Workflow['to']
@@ -86,8 +92,9 @@ export function HomePage() {
   ]
 
   function renderWorkflowCard(workflow: typeof workflows[number]) {
-    const { to, title, description, requiresBothPdfs } = workflow
+    const { to, title, description, requiresBothPdfs, requiresFinalPdf } = workflow
     const needsPdfs = requiresBothPdfs
+    const needsFinalPdf = requiresFinalPdf
 
     if (to === '/field6') {
       const canEnter = canProceed || field6Card.hasSavedSession
@@ -240,15 +247,17 @@ export function HomePage() {
       )
     }
 
+    const genericDisabled = (needsPdfs && !canProceed) || (needsFinalPdf && !finalLawFile)
+
     return (
       <article key={to} className="workflow-card">
         <h3>{title}</h3>
         <p>{description}</p>
         <Link
-          className={`btn btn-primary${needsPdfs && !canProceed ? ' btn-disabled' : ''}`}
+          className={`btn btn-primary${genericDisabled ? ' btn-disabled' : ''}`}
           to={to}
-          aria-disabled={needsPdfs && !canProceed}
-          onClick={(e) => { if (needsPdfs && !canProceed) e.preventDefault() }}
+          aria-disabled={genericDisabled}
+          onClick={(e) => { if (genericDisabled) e.preventDefault() }}
         >
           Εκκίνηση ροής
         </Link>
@@ -269,7 +278,17 @@ export function HomePage() {
 
       <div className="step-container">
         <div className="step-content">
-          <h2 className="step-title">Επιλογή αρχείων εισόδου</h2>
+          <div className="input-files-header">
+            <h2 className="step-title">Επιλογή αρχείων εισόδου</h2>
+            <button
+              type="button"
+              className="btn btn-ghost"
+              onClick={clearInputFiles}
+              disabled={!hasInputFiles}
+            >
+              Καθαρισμός
+            </button>
+          </div>
           <div className="file-pair">
             <div className="file-pair__item">
               <h3>Σχέδιο νόμου προς διαβούλευση</h3>
