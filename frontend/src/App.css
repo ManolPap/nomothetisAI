@@ -495,6 +495,18 @@ a {
   font-size: 0.95rem;
 }
 
+.input-files-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.input-files-header .step-title {
+  margin-bottom: 0;
+}
+
 .home-page__actions {
   display: grid;
   gap: 0.55rem;
