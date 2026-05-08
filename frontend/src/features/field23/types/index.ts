@@ -37,8 +37,10 @@ export interface CompareLawsResponse {
 
 export interface CommentContributionOut {
   comment_id: string
+  comment_text: string
   contribution_likelihood: 'none' | 'low' | 'medium' | 'high'
   rationale_el: string
+  adopted?: boolean
 }
 
 export interface ArticleChangeCommentsItem {
@@ -60,4 +62,47 @@ export interface AttributeLegislativeCommentsRequest {
 
 export interface AttributeLegislativeCommentsResponse {
   items: ItemAttributionOut[]
+}
+
+export interface ConsultationReportCommentInput {
+  comment_id: string
+  rationale_el: string
+  adopted: boolean
+}
+
+export interface ConsultationReportItemInput {
+  item_index: number
+  article_number: string
+  article_title: string
+  comments: ConsultationReportCommentInput[]
+}
+
+export interface GenerateConsultationReportRequest {
+  items: ConsultationReportItemInput[]
+}
+
+export interface ConsultationReportTotals {
+  comments_total: number
+  adopted_total: number
+  not_adopted_total: number
+  participants_total: number
+}
+
+export interface ConsultationReportArticleSection {
+  article_number: string
+  article_title: string
+  comment_count: number
+  adopted_count: number
+  not_adopted_count: number
+  adopted_summary: string
+  not_adopted_summary: string
+}
+
+export type ConsultationReportLlmStatus = 'ok' | 'fallback' | 'partial'
+
+export interface GenerateConsultationReportResponse {
+  totals: ConsultationReportTotals
+  articles_section: ConsultationReportArticleSection[]
+  final_preview_text: string
+  llm_status: ConsultationReportLlmStatus
 }

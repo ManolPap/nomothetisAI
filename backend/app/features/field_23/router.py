@@ -1,6 +1,7 @@
 from typing import Annotated
 
 from fastapi import APIRouter, File, HTTPException, UploadFile
+from pydantic import ValidationError
 
 from app.core.config import settings
 from app.features.field_23.schemas import (
@@ -9,9 +10,15 @@ from app.features.field_23.schemas import (
     AttributeLegislativeCommentsResponse,
     CompareLawsRequest,
     CompareLawsResponse,
+    GenerateConsultationReportRequest,
+    GenerateConsultationReportResponse,
     SplitLawResponse,
 )
-from app.features.field_23.services.comments import attribute_legislative_comments_llm
+from app.features.field_23.services.comments import (
+    ConsultationReportValidationError,
+    attribute_legislative_comments_llm,
+    generate_consultation_report,
+)
 from app.features.field_23.services.comparison import run_comparison_pipeline
 from app.features.field_23.services.comparison.serialization import article_diff_to_out
 from app.features.field_23.services.documents import split_uploaded_law
@@ -72,3 +79,26 @@ async def attribute_legislative_comments_endpoint(
             detail="Ρυθμίστε FEATURE_FIELD_23_GOOGLE_API_KEY για κλήσεις στο Gemini.",
         )
     return await attribute_legislative_comments_llm(body)
+
+
+@router.post(
+    "/generate-consultation-report",
+    response_model=GenerateConsultationReportResponse,
+    summary="Παραγωγή αναφοράς διαβούλευσης ανά άρθρο",
+    description=(
+        "Δημιουργεί αναφορά μόνο για την ενότητα «επί των άρθρων» με σύνοψη "
+        "υιοθετημένων/μη υιοθετημένων σχολίων ανά άρθρο και τελικό preview."
+    ),
+)
+async def generate_consultation_report_endpoint(
+    body: dict,
+) -> GenerateConsultationReportResponse:
+    try:
+        request = GenerateConsultationReportRequest.model_validate(body)
+    except ValidationError as exc:
+        raise HTTPException(status_code=400, detail=exc.errors()) from exc
+
+    try:
+        return await generate_consultation_report(request)
+    except ConsultationReportValidationError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc

@@ -7,7 +7,7 @@ const PERSIST_EVENT = 'field23-persist-changed'
 
 /** Shape stored in localStorage (no File objects). */
 interface Field23PersistedV1 {
-  v: 1
+  v: 3
   currentStep: Field23State['currentStep']
 
   splitInitialStatus: Field23State['splitInitialStatus']
@@ -23,6 +23,7 @@ interface Field23PersistedV1 {
   compareError: Field23State['compareError']
 
   filterChangeTypes: ChangeType[]
+  filterAttributionLikelihoods: Array<'none' | 'low' | 'medium' | 'high'>
   filterMinFraction: number
   filterArticleQuery: string
 
@@ -32,7 +33,15 @@ interface Field23PersistedV1 {
   attributionResults: Record<string, ItemAttributionOut>
   attributionError: Field23State['attributionError']
 
+  reportStatus: Field23State['reportStatus']
+  reportError: Field23State['reportError']
+  reportDraft: Field23State['reportDraft']
+
   flowCompleted: boolean
+}
+
+interface Field23PersistedLegacyV2 extends Omit<Field23PersistedV1, 'v' | 'reportStatus' | 'reportError'> {
+  v: 2
 }
 
 function notifyPersistListeners(): void {
@@ -48,7 +57,7 @@ export function stateToPersisted(state: Field23State): Field23PersistedV1 {
   })
 
   return {
-    v: 1,
+    v: 3,
     currentStep: state.currentStep,
     splitInitialStatus: state.splitInitialStatus,
     splitFinalStatus: state.splitFinalStatus,
@@ -61,12 +70,16 @@ export function stateToPersisted(state: Field23State): Field23PersistedV1 {
     diffs: state.diffs,
     compareError: state.compareError,
     filterChangeTypes: [...state.filterChangeTypes],
+    filterAttributionLikelihoods: [...state.filterAttributionLikelihoods],
     filterMinFraction: state.filterMinFraction,
     filterArticleQuery: state.filterArticleQuery,
     selectedDiffIndex: state.selectedDiffIndex,
     attributionStatus: state.attributionStatus,
     attributionResults: attributionPlain,
     attributionError: state.attributionError,
+    reportStatus: state.reportStatus,
+    reportError: state.reportError,
+    reportDraft: state.reportDraft,
     flowCompleted: state.flowCompleted,
   }
 }
@@ -154,6 +167,11 @@ export function persistedToState(p: Field23PersistedV1): Field23State {
     compareError,
 
     filterChangeTypes,
+    filterAttributionLikelihoods: new Set(
+      Array.isArray(p.filterAttributionLikelihoods) && p.filterAttributionLikelihoods.length > 0
+        ? p.filterAttributionLikelihoods
+        : ['none', 'low', 'medium', 'high'],
+    ),
     filterMinFraction: typeof p.filterMinFraction === 'number' ? p.filterMinFraction : 0,
     filterArticleQuery: typeof p.filterArticleQuery === 'string' ? p.filterArticleQuery : '',
 
@@ -167,6 +185,25 @@ export function persistedToState(p: Field23PersistedV1): Field23State {
       p.attributionResults && typeof p.attributionResults === 'object' ? p.attributionResults : {},
     ),
     attributionError: p.attributionError ?? null,
+    reportStatus: p.reportStatus ?? 'idle',
+    reportError: p.reportError ?? null,
+    reportDraft:
+      p.reportDraft && typeof p.reportDraft === 'object'
+        ? {
+            ...initialField23State.reportDraft,
+            ...p.reportDraft,
+            totals:
+              p.reportDraft.totals && typeof p.reportDraft.totals === 'object'
+                ? {
+                    ...initialField23State.reportDraft.totals,
+                    ...p.reportDraft.totals,
+                  }
+                : initialField23State.reportDraft.totals,
+            articles_section: Array.isArray(p.reportDraft.articles_section)
+              ? p.reportDraft.articles_section
+              : initialField23State.reportDraft.articles_section,
+          }
+        : initialField23State.reportDraft,
 
     flowCompleted: Boolean(p.flowCompleted),
   }
@@ -177,9 +214,17 @@ export function loadField23Persisted(): Field23State | null {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY)
     if (!raw) return null
-    const data = JSON.parse(raw) as Field23PersistedV1
-    if (data?.v !== 1) return null
-    return persistedToState(data)
+    const data = JSON.parse(raw) as Field23PersistedV1 | Field23PersistedLegacyV2
+    if (data?.v === 3) return persistedToState(data)
+    if (data?.v === 2) {
+      return persistedToState({
+        ...data,
+        v: 3,
+        reportStatus: 'idle',
+        reportError: null,
+      })
+    }
+    return null
   } catch {
     return null
   }
@@ -219,8 +264,8 @@ export function readField23HomeMeta(): Field23HomeMeta {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY)
     if (!raw) return { flowCompleted: false, hasSavedSession: false }
-    const data = JSON.parse(raw) as Field23PersistedV1
-    if (data?.v !== 1) return { flowCompleted: false, hasSavedSession: false }
+    const data = JSON.parse(raw) as Field23PersistedV1 | Field23PersistedLegacyV2
+    if (data?.v !== 3 && data?.v !== 2) return { flowCompleted: false, hasSavedSession: false }
 
     const hasSavedSession =
       (data.currentStep != null && data.currentStep > 1) ||

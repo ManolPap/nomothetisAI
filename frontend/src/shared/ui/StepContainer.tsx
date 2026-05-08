@@ -5,6 +5,7 @@ interface StepContainerProps {
   onBack?: () => void
   onNext?: () => void
   nextLabel?: string
+  nextClassName?: string
   nextDisabled?: boolean
   isLoading?: boolean
 }
@@ -14,6 +15,7 @@ export function StepContainer({
   onBack,
   onNext,
   nextLabel = 'Επόμενο',
+  nextClassName = 'btn-primary',
   nextDisabled = false,
   isLoading = false,
 }: StepContainerProps) {
@@ -31,7 +33,7 @@ export function StepContainer({
         {onNext && (
           <button
             type="button"
-            className="btn btn-primary"
+            className={`btn ${nextClassName}`}
             onClick={onNext}
             disabled={nextActionDisabled}
             aria-disabled={nextActionDisabled}

@@ -5,6 +5,8 @@ import type {
   AttributeLegislativeCommentsResponse,
   CompareLawsRequest,
   CompareLawsResponse,
+  GenerateConsultationReportRequest,
+  GenerateConsultationReportResponse,
   SplitLawResponse,
 } from '../types'
 
@@ -34,6 +36,17 @@ export function attributeComments(
   return postJson<AttributeLegislativeCommentsResponse>(
     buildUrl('/api/field-23/attribute-legislative-comments'),
     payload,
-    { signal, timeoutMs: LONG_TIMEOUT_MS },
+    { signal, timeoutMs: VERY_LONG_TIMEOUT_MS },
+  )
+}
+
+export function generateConsultationReport(
+  payload: GenerateConsultationReportRequest,
+  signal?: AbortSignal,
+): Promise<GenerateConsultationReportResponse> {
+  return postJson<GenerateConsultationReportResponse>(
+    buildUrl('/api/field-23/generate-consultation-report'),
+    payload,
+    { signal, timeoutMs: VERY_LONG_TIMEOUT_MS },
   )
 }

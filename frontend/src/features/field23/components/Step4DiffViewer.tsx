@@ -3,9 +3,15 @@ import { useVirtualizer } from '@tanstack/react-virtual'
 import { StepHeader } from '../../../shared/ui/StepHeader'
 import { StepContainer } from '../../../shared/ui/StepContainer'
 import { ErrorBoundary } from '../../../shared/ui/ErrorBoundary'
+import { ErrorBanner } from '../../../shared/ui/ErrorBanner'
 import { isApiError } from '../../../shared/api/errors'
-import { attributeComments } from '../api'
-import { ALL_CHANGE_TYPES, type Field23Action, type Field23State } from '../state/reducer'
+import { attributeComments, generateConsultationReport } from '../api'
+import { buildConsultationReportPayload } from '../reportPayload'
+import {
+  ALL_CHANGE_TYPES,
+  type Field23Action,
+  type Field23State,
+} from '../state/reducer'
 import type { ArticleDiffOut, ChangeType, DiffSegmentOut } from '../types'
 import { AttributionPanel } from './AttributionPanel'
 
@@ -29,6 +35,7 @@ export function Step4DiffViewer({ state, dispatch }: Props) {
     .map((d, idx) => ({ diff: d, originalIndex: idx }))
     .filter(({ diff: d }) => {
       if (!state.filterChangeTypes.has(d.change_type)) return false
+      if (d.token_change_fraction < state.filterMinFraction) return false
       const query = state.filterArticleQuery.toLowerCase()
       if (query) {
         const num = d.old_article?.article_number ?? d.new_article?.article_number ?? ''
@@ -52,8 +59,14 @@ export function Step4DiffViewer({ state, dispatch }: Props) {
     if (!diff) return
 
     dispatch({ type: 'SELECT_DIFF', index: diffIndex })
-    dispatch({ type: 'ATTRIBUTION_LOADING' })
     setAttributionOpen(true)
+
+    if (state.attributionResults[diffIndex]) {
+      dispatch({ type: 'ATTRIBUTION_SUCCESS', results: [state.attributionResults[diffIndex]] })
+      return
+    }
+
+    dispatch({ type: 'ATTRIBUTION_LOADING' })
 
     const controller = new AbortController()
     attributionAbortRef.current = controller
@@ -85,6 +98,28 @@ export function Step4DiffViewer({ state, dispatch }: Props) {
     }
   }
 
+  async function generateReportAndContinue() {
+    dispatch({ type: 'REPORT_GENERATION_LOADING' })
+    try {
+      const response = await generateConsultationReport(buildConsultationReportPayload(state))
+      dispatch({
+        type: 'REPORT_GENERATION_SUCCESS',
+        draft: {
+          totals: response.totals,
+          articles_section: response.articles_section,
+          final_preview_text: response.final_preview_text,
+          llm_status: response.llm_status,
+        },
+      })
+      dispatch({ type: 'GO_TO_STEP', step: 4 })
+    } catch (e) {
+      dispatch({
+        type: 'REPORT_GENERATION_ERROR',
+        error: isApiError(e) ? e.userMessage() : 'Σφάλμα δημιουργίας έκθεσης.',
+      })
+    }
+  }
+
   function closeAttribution() {
     attributionAbortRef.current?.abort()
     attributionAbortRef.current = null
@@ -102,13 +137,20 @@ export function Step4DiffViewer({ state, dispatch }: Props) {
 
   return (
     <>
-      <StepContainer onBack={() => dispatch({ type: 'GO_TO_STEP', step: 3 })}>
+      <StepContainer
+        onBack={() => dispatch({ type: 'GO_TO_STEP', step: 2 })}
+        onNext={() => { void generateReportAndContinue() }}
+        nextLabel="Σύνταξη αναφοράς"
+        isLoading={state.reportStatus === 'loading'}
+      >
         <StepHeader
           title="Προβολή Διαφορών"
-          stepNumber={4}
+          stepNumber={3}
           totalSteps={4}
           description={`${filteredDiffs.length} αλλαγές εμφανίζονται`}
         />
+
+        {state.reportError && <ErrorBanner message={state.reportError} onRetry={generateReportAndContinue} />}
 
         {/* Filters row */}
         <div className="compare-filters">
@@ -122,6 +164,24 @@ export function Step4DiffViewer({ state, dispatch }: Props) {
               {CHANGE_TYPE_LABELS[ct]}
             </label>
           ))}
+          <label className="compare-filters__fraction" htmlFor="field23-change-threshold">
+            <span className="compare-filters__label">Ελάχιστη αλλαγή</span>
+            <input
+              id="field23-change-threshold"
+              type="range"
+              min={0}
+              max={100}
+              step={1}
+              value={Math.round(state.filterMinFraction * 100)}
+              onChange={(e) =>
+                dispatch({ type: 'SET_FILTER_FRACTION', value: Number(e.target.value) / 100 })
+              }
+              aria-label="Φίλτρο ελάχιστου ποσοστού αλλαγής"
+            />
+            <span className="compare-filters__fraction-value">
+              {Math.round(state.filterMinFraction * 100)}%
+            </span>
+          </label>
           <input
             type="text"
             className="filter-input"
@@ -145,7 +205,12 @@ export function Step4DiffViewer({ state, dispatch }: Props) {
                     ref={virtualizer.measureElement}
                     data-index={vItem.index}
                   >
-                    <DiffRow diff={diff} index={row.originalIndex} onAttribute={runAttribution} />
+                    <DiffRow
+                      diff={diff}
+                      index={row.originalIndex}
+                      onAttribute={runAttribution}
+                      hasAttribution={Boolean(state.attributionResults[row.originalIndex])}
+                    />
                   </div>
                 )
               })}
@@ -154,27 +219,17 @@ export function Step4DiffViewer({ state, dispatch }: Props) {
         ) : (
           <div className="diff-list">
             {filteredDiffs.map((row) => (
-              <DiffRow key={row.originalIndex} diff={row.diff} index={row.originalIndex} onAttribute={runAttribution} />
+              <DiffRow
+                key={row.originalIndex}
+                diff={row.diff}
+                index={row.originalIndex}
+                onAttribute={runAttribution}
+                hasAttribution={Boolean(state.attributionResults[row.originalIndex])}
+              />
             ))}
           </div>
         )}
 
-        <div className="field23-step4-complete">
-          {state.flowCompleted && (
-            <p className="field23-step4-complete__done" role="status">
-              Η ροή σημειώθηκε ως ολοκληρωμένη στην αρχική.
-            </p>
-          )}
-          {!state.flowCompleted && (
-            <button
-              type="button"
-              className="btn btn-field23-complete"
-              onClick={() => dispatch({ type: 'MARK_FLOW_COMPLETED' })}
-            >
-              Ολοκληρώθηκε
-            </button>
-          )}
-        </div>
       </StepContainer>
 
       {attributionOpen && selectedDiff && (
@@ -183,6 +238,7 @@ export function Step4DiffViewer({ state, dispatch }: Props) {
             diff={selectedDiff}
             diffIndex={state.selectedDiffIndex!}
             state={state}
+            dispatch={dispatch}
             onClose={closeAttribution}
           />
         </ErrorBoundary>
@@ -195,10 +251,12 @@ function DiffRow({
   diff,
   index,
   onAttribute,
+  hasAttribution,
 }: {
   diff: ArticleDiffOut
   index: number
   onAttribute: (i: number) => void
+  hasAttribution: boolean
 }) {
   const [expanded, setExpanded] = useState(false)
   const articleLabel =
@@ -236,7 +294,7 @@ function DiffRow({
           className="btn btn-secondary btn-sm"
           onClick={() => onAttribute(index)}
         >
-          Απόδοση σχολίων
+          {hasAttribution ? 'Εμφάνιση σχολίων' : 'Απόδοση σχολίων'}
         </button>
       </div>
       {expanded && (
