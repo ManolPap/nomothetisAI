@@ -22,12 +22,14 @@ dependencies = [
     "scikit-learn>=1.6.0",
     "tavily-python>=0.7.24",
     "uvicorn>=0.46.0",
+    "xlrd>=2.0.2",
 ]
 
 [dependency-groups]
 dev = [
     "mypy>=1.20.2",
     "ruff>=0.15.12",
+    "types-xlrd>=2.0.0.20251020",
 ]
 
 [tool.ruff]

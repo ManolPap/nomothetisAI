@@ -1,6 +1,6 @@
 from typing import Literal, Self
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, StrictBool, model_validator
 
 
 class ArticleOut(BaseModel):
@@ -52,6 +52,7 @@ class StoredLegislativeComment(BaseModel):
     id: str
     target_article_number: str
     text: str
+    participant: str | None = None
 
 
 class ArticleChangeCommentsItem(BaseModel):
@@ -85,6 +86,7 @@ class AttributeLegislativeCommentsRequest(BaseModel):
 
 class CommentContributionOut(BaseModel):
     comment_id: str
+    comment_text: str
     contribution_likelihood: Literal["none", "low", "medium", "high"]
     rationale_el: str
 
@@ -96,3 +98,44 @@ class ItemAttributionOut(BaseModel):
 
 class AttributeLegislativeCommentsResponse(BaseModel):
     items: list[ItemAttributionOut] = Field(default_factory=list)
+
+
+class ConsultationReportCommentIn(BaseModel):
+    comment_id: str = Field(..., min_length=1)
+    rationale_el: str = Field(..., min_length=1)
+    adopted: StrictBool
+
+
+class ConsultationReportItemIn(BaseModel):
+    item_index: int = Field(..., ge=0)
+    article_number: str = Field(..., min_length=1)
+    article_title: str = Field(..., min_length=1)
+    comments: list[ConsultationReportCommentIn] = Field(default_factory=list)
+
+
+class GenerateConsultationReportRequest(BaseModel):
+    items: list[ConsultationReportItemIn] = Field(..., min_length=1)
+
+
+class ConsultationReportTotalsOut(BaseModel):
+    comments_total: int
+    adopted_total: int
+    not_adopted_total: int
+    participants_total: int
+
+
+class ConsultationArticleSectionOut(BaseModel):
+    article_number: str
+    article_title: str
+    comment_count: int
+    adopted_count: int
+    not_adopted_count: int
+    adopted_summary: str
+    not_adopted_summary: str
+
+
+class GenerateConsultationReportResponse(BaseModel):
+    totals: ConsultationReportTotalsOut
+    articles_section: list[ConsultationArticleSectionOut] = Field(default_factory=list)
+    final_preview_text: str
+    llm_status: Literal["ok", "fallback", "partial"]

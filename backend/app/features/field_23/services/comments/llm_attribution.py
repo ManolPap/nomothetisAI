@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from functools import lru_cache
+from typing import Literal
 
 from langchain_google_genai import ChatGoogleGenerativeAI
 from pydantic import BaseModel, Field
@@ -36,12 +37,18 @@ def _estimate_tokens(text: str) -> int:
 class _LLMContributionsPayload(BaseModel):
     """Μορφή structured output από το Gemini."""
 
-    contributions: list[CommentContributionOut] = Field(
+    contributions: list[_LLMContributionJudgement] = Field(
         ...,
         description=(
             "Μία γραμμή ανά σχόλιο· τα comment_id πρέπει να ταιριάζουν ακριβώς με τα δοθέντα."
         ),
     )
+
+
+class _LLMContributionJudgement(BaseModel):
+    comment_id: str
+    contribution_likelihood: Literal["none", "low", "medium", "high"]
+    rationale_el: str
 
 
 def _truncate(text: str, limit: int = _MAX_ARTICLE_CHARS) -> str:
@@ -117,6 +124,7 @@ def _merge_judgements(
         return [
             CommentContributionOut(
                 comment_id=c.id,
+                comment_text=c.text,
                 contribution_likelihood="none",
                 rationale_el="Δεν επεστράφη απάντηση από το μοντέλο.",
             )
@@ -127,11 +135,19 @@ def _merge_judgements(
     for c in comments:
         j = by_id.get(c.id)
         if j is not None:
-            out.append(j)
+            out.append(
+                CommentContributionOut(
+                    comment_id=j.comment_id,
+                    comment_text=c.text,
+                    contribution_likelihood=j.contribution_likelihood,
+                    rationale_el=j.rationale_el,
+                )
+            )
         else:
             out.append(
                 CommentContributionOut(
                     comment_id=c.id,
+                    comment_text=c.text,
                     contribution_likelihood="none",
                     rationale_el="Το μοντέλο δεν επέστρεψε κρίση για αυτό το id.",
                 )

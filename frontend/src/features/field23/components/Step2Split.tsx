@@ -5,7 +5,7 @@ import { LoadingPanel } from '../../../shared/ui/LoadingPanel'
 import { ErrorBanner } from '../../../shared/ui/ErrorBanner'
 import { EmptyState } from '../../../shared/ui/EmptyState'
 import { isApiError } from '../../../shared/api/errors'
-import { splitLaw } from '../api'
+import { compareLaws, splitLaw } from '../api'
 import type { Field23Action, Field23State } from '../state/reducer'
 
 interface Props {
@@ -57,7 +57,26 @@ export function Step2Split({ state, dispatch }: Props) {
   }, []) 
 
   const bothReady = state.splitInitialStatus === 'ready' && state.splitFinalStatus === 'ready'
-  const isLoading = state.splitInitialStatus === 'loading' || state.splitFinalStatus === 'loading'
+  const isLoading =
+    state.splitInitialStatus === 'loading' ||
+    state.splitFinalStatus === 'loading' ||
+    state.compareStatus === 'loading'
+
+  async function runCompareAndContinue() {
+    if (!bothReady || state.compareStatus === 'loading') return
+    dispatch({ type: 'COMPARE_LOADING' })
+    try {
+      const res = await compareLaws({
+        initial_law_articles: state.initialArticles,
+        final_law_articles: state.finalArticles,
+        normalize_before_diff: true,
+      })
+      dispatch({ type: 'COMPARE_SUCCESS', diffs: res.diffs })
+      dispatch({ type: 'GO_TO_STEP', step: 3 })
+    } catch (e) {
+      dispatch({ type: 'COMPARE_ERROR', error: isApiError(e) ? e.userMessage() : 'Σφάλμα' })
+    }
+  }
 
   return (
     <>
@@ -66,7 +85,7 @@ export function Step2Split({ state, dispatch }: Props) {
       </div>
       <StepContainer
         onBack={() => dispatch({ type: 'GO_TO_STEP', step: 1 })}
-        onNext={() => dispatch({ type: 'GO_TO_STEP', step: 3 })}
+        onNext={() => { void runCompareAndContinue() }}
         nextDisabled={!bothReady}
         isLoading={isLoading}
       >
@@ -96,6 +115,7 @@ export function Step2Split({ state, dispatch }: Props) {
             )}
           </div>
         </div>
+        {state.compareError && <ErrorBanner message={state.compareError} onRetry={runCompareAndContinue} />}
       </StepContainer>
     </>
   )

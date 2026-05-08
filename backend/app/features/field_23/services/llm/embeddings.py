@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import re
 import time
 from collections.abc import Callable
 
@@ -49,6 +50,14 @@ class CachedEmbeddings:
             "model_fallbacks": 0,
         }
 
+    @staticmethod
+    def _slug_model(model: str) -> str:
+        return re.sub(r"[^a-zA-Z0-9]+", "_", model).strip("_").lower()
+
+    def _namespace_for_model(self, model: str) -> str:
+        # Keep model caches isolated to avoid mixed-vector invalidations.
+        return f"{self._namespace}::model::{self._slug_model(model)}"
+
     def _get_client(self, model: str) -> GoogleGenerativeAIEmbeddings:
         if model not in self._clients:
             api_key_secret = SecretStr(self._api_key) if self._api_key else None
@@ -67,7 +76,7 @@ class CachedEmbeddings:
     def _cache_key(self, text: str, *, kind: str, model: str | None = None) -> str:
         model_name = model or self._active_model
         return (
-            f"embeddings::{self._namespace}::{model_name}::{kind}::"
+            f"embeddings::{self._namespace_for_model(model_name)}::{kind}::"
             f"{hash_text(text)}"
         )
 
@@ -214,21 +223,28 @@ class CachedEmbeddings:
                 self.stats["cache_misses"] += 1
 
         hit_models = {m for _, _, m in pending_hits}
+        preferred_model = self._active_model if self._active_model in hit_models else None
+        if preferred_model is None and hit_models:
+            preferred_model = next(iter(hit_models))
+
         if len(hit_models) > 1:
             logger.warning(
                 "field_23.llm.embeddings.cache model_mismatch namespace=%s "
-                "models=%s — refetching all",
+                "models=%s — using preferred_model=%s and recomputing missing",
                 self._namespace,
                 sorted(hit_models),
+                preferred_model,
             )
-            for _idx, _vector, _model in pending_hits:
-                self.stats["cache_misses"] += 1
-        else:
-            for idx, vector, _model in pending_hits:
+
+        for idx, vector, model in pending_hits:
+            if preferred_model is None or model == preferred_model:
                 self.stats["cache_hits"] += 1
                 results[idx] = vector
-            if hit_models:
-                self._active_model = next(iter(hit_models))
+            else:
+                self.stats["cache_misses"] += 1
+
+        if preferred_model is not None:
+            self._active_model = preferred_model
 
         missing_indices = [i for i in range(n) if results[i] is None]
         if not missing_indices:

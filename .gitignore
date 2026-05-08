@@ -25,6 +25,7 @@ wheels/
 *.sln
 *.sw?
 local_data/
+.tmp/
 
 # Frontend (Vite/Node)
 frontend/node_modules/
