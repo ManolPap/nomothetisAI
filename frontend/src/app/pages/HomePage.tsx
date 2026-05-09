@@ -68,9 +68,9 @@ export function HomePage() {
 
   const workflows = [
     { to: '/field4', title: 'Πεδίο 4', description: 'Νομοθετικές αναφορές και ανάλυση από το ανεβασμένο κείμενο.', requiresBothPdfs: false, requiresFinalPdf: true },
-    { to: '/field6', title: 'Πεδίο 6', description: 'Μεταδεδομένα, web facts, Eurostat και τελική σύνθεση κειμένου.', requiresBothPdfs: true, requiresFinalPdf: false },
+    { to: '/field6', title: 'Πεδίο 6', description: 'Συναφείς Πρακτικές.', requiresBothPdfs: true, requiresFinalPdf: false },
     { to: '/field7', title: 'Πεδίο 7', description: 'Αντιστοίχιση του νόμου με τους 17 Στόχους Βιώσιμης Ανάπτυξης (SDGs) του ΟΗΕ.', requiresBothPdfs: false, requiresFinalPdf: false },
-    { to: '/field9', title: 'Πεδίο 9', description: 'Εξαγωγή τομέα, επιλογή δεικτών και πίνακας τιμών στόχων.', requiresBothPdfs: true, requiresFinalPdf: false },
+    { to: '/field9', title: 'Πεδίο 9', description: 'Ειδικότεροι στόχοι ανάλογα με τον τομέα νομοθέτησης.', requiresBothPdfs: true, requiresFinalPdf: false },
     { to: '/field23', title: 'Πεδίο 23', description: 'Σχόλια στο πλαίσιο της διαβούλευσης μέσω της ηλεκτρονικής πλατφόρμας www.opengov.gr.', requiresBothPdfs: true, requiresFinalPdf: false },
   ] as const
   type Workflow = typeof workflows[number]
