@@ -1968,3 +1968,53 @@ a {
   background: #fff;
   box-sizing: border-box;
 }
+
+.field7-sdg-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+}
+
+.field7-sdg-grid__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.field7-sdg-grid__checkbox {
+  font-size: 1.2rem;
+  line-height: 1;
+  color: #1f2937;
+  font-weight: 500;
+}
+
+.field7-sdg-grid__item--checked .field7-sdg-grid__checkbox {
+  font-weight: 800;
+}
+
+.field7-sdg-grid__badge {
+  width: 100%;
+  min-height: 82px;
+  border-radius: 10px;
+  color: #fff;
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  box-sizing: border-box;
+}
+
+.field7-sdg-grid__number {
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.field7-sdg-grid__title {
+  margin-top: 0.25rem;
+  font-size: 0.72rem;
+  line-height: 1.2;
+  font-weight: 700;
+  word-break: break-word;
+}
