@@ -1,4 +1,4 @@
-import { type Dispatch, useState } from 'react'
+import { type Dispatch, useEffect, useState } from 'react'
 import { StepHeader } from '../../../shared/ui/StepHeader'
 import { StepContainer } from '../../../shared/ui/StepContainer'
 import { ErrorBanner } from '../../../shared/ui/ErrorBanner'
@@ -12,8 +12,36 @@ interface Props {
   dispatch: Dispatch<Field6Action>
 }
 
+interface SynthesisParts {
+  i: string
+  ii: string
+  iii: string
+}
+
+function parseSynthesisText(text: string): SynthesisParts {
+  const normalized = text.replace(/\r\n/g, '\n')
+  const iMatch = normalized.match(/i\)\s*([\s\S]*?)(?=\nii\)|$)/)
+  const iiMatch = normalized.match(/ii\)\s*([\s\S]*?)(?=\niii\)|$)/)
+  const iiiMatch = normalized.match(/iii\)\s*([\s\S]*?)$/)
+
+  return {
+    i: iMatch?.[1]?.trim() ?? '',
+    ii: iiMatch?.[1]?.trim() ?? '',
+    iii: iiiMatch?.[1]?.trim() ?? '',
+  }
+}
+
+function buildSynthesisText(parts: SynthesisParts): string {
+  return `6. Συναφείς Πρακτικές\ni) ${parts.i}\nii) ${parts.ii}\niii) ${parts.iii}`
+}
+
 export function Step4Synthesis({ state, dispatch }: Props) {
   const [hasRun, setHasRun] = useState(state.synthesisStatus === 'ready')
+  const [parts, setParts] = useState<SynthesisParts>(() => parseSynthesisText(state.synthesisText))
+
+  useEffect(() => {
+    setParts(parseSynthesisText(state.synthesisText))
+  }, [state.synthesisText])
 
   async function runSynthesis() {
     if (!state.metadata || !state.factsText) return
@@ -52,6 +80,14 @@ export function Step4Synthesis({ state, dispatch }: Props) {
 
   const isLoading = state.synthesisStatus === 'loading'
 
+  function updatePart(partKey: keyof SynthesisParts, value: string) {
+    setParts((prev) => {
+      const next = { ...prev, [partKey]: value }
+      dispatch({ type: 'SET_SYNTHESIS_TEXT', text: buildSynthesisText(next) })
+      return next
+    })
+  }
+
   return (
     <StepContainer
       onBack={() => dispatch({ type: 'GO_TO_STEP', step: 3 })}
@@ -87,13 +123,45 @@ export function Step4Synthesis({ state, dispatch }: Props) {
           <button type="button" className="btn btn-secondary btn-sm" onClick={runSynthesis}>
             Εκ νέου Σύνθεση
           </button>
-          <textarea
-            className="synthesis-textarea"
-            value={state.synthesisText}
-            onChange={(e) => dispatch({ type: 'SET_SYNTHESIS_TEXT', text: e.target.value })}
-            rows={12}
-            aria-label="Κείμενο σύνθεσης"
-          />
+          <table className="field6-synthesis-table">
+            <tbody>
+              <tr>
+                <td className="field6-synthesis-table__label">
+                  i) σε άλλη/ες χώρα/ες της Ε.Ε. ή του ΟΟΣΑ:
+                </td>
+                <td>
+                  <textarea
+                    value={parts.i}
+                    onChange={(e) => updatePart('i', e.target.value)}
+                    rows={5}
+                    aria-label="Συναφείς πρακτικές σε άλλη/ες χώρα/ες της Ε.Ε. ή του ΟΟΣΑ"
+                  />
+                </td>
+              </tr>
+              <tr>
+                <td className="field6-synthesis-table__label">ii) σε όργανα της Ε.Ε.:</td>
+                <td>
+                  <textarea
+                    value={parts.ii}
+                    onChange={(e) => updatePart('ii', e.target.value)}
+                    rows={5}
+                    aria-label="Συναφείς πρακτικές σε όργανα της Ε.Ε."
+                  />
+                </td>
+              </tr>
+              <tr>
+                <td className="field6-synthesis-table__label">iii) σε διεθνείς οργανισμούς:</td>
+                <td>
+                  <textarea
+                    value={parts.iii}
+                    onChange={(e) => updatePart('iii', e.target.value)}
+                    rows={5}
+                    aria-label="Συναφείς πρακτικές σε διεθνείς οργανισμούς"
+                  />
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       )}
 
