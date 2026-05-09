@@ -1933,3 +1933,38 @@ a {
   color: #0b6a45;
   font-weight: 600;
 }
+
+.field6-synthesis-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 0.95rem;
+  color: #1d2b3f;
+  margin-top: 0.75rem;
+}
+
+.field6-synthesis-table td {
+  border: 1px solid #8f98a8;
+  padding: 0.5rem;
+  vertical-align: top;
+}
+
+.field6-synthesis-table__label {
+  width: 260px;
+  background: #f6f8fc;
+  font-weight: 600;
+}
+
+.field6-synthesis-table textarea {
+  width: 100%;
+  min-height: 110px;
+  border: 1px solid #b7bfcb;
+  border-radius: 6px;
+  padding: 0.5rem 0.6rem;
+  resize: vertical;
+  font: inherit;
+  line-height: 1.45;
+  color: inherit;
+  background: #fff;
+  box-sizing: border-box;
+}
