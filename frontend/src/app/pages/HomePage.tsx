@@ -67,11 +67,12 @@ export function HomePage() {
   }
 
   const workflows = [
-    { to: '/field4', title: 'Πεδίο 4', description: 'Νομοθετικές αναφορές και ανάλυση από το ανεβασμένο κείμενο.', requiresBothPdfs: false, requiresFinalPdf: true },
+    { to: '/field4', title: 'Πεδίο 4', description: 'Νομοθετικές αναφορές.', requiresBothPdfs: false, requiresFinalPdf: true },
     { to: '/field6', title: 'Πεδίο 6', description: 'Συναφείς Πρακτικές.', requiresBothPdfs: true, requiresFinalPdf: false },
     { to: '/field7', title: 'Πεδίο 7', description: 'Αντιστοίχιση του νόμου με τους 17 Στόχους Βιώσιμης Ανάπτυξης (SDGs) του ΟΗΕ.', requiresBothPdfs: false, requiresFinalPdf: false },
     { to: '/field9', title: 'Πεδίο 9', description: 'Ειδικότεροι στόχοι ανάλογα με τον τομέα νομοθέτησης.', requiresBothPdfs: true, requiresFinalPdf: false },
     { to: '/field23', title: 'Πεδίο 23', description: 'Σχόλια στο πλαίσιο της διαβούλευσης μέσω της ηλεκτρονικής πλατφόρμας www.opengov.gr.', requiresBothPdfs: true, requiresFinalPdf: false },
+    { to: '/field29', title: 'Πεδίο 29', description: 'Τροποποίηση - Αντικατάσταση - Συπλήρωση Διατάξεων', requiresBothPdfs: false, requiresFinalPdf: true },
   ] as const
   type Workflow = typeof workflows[number]
   type WorkflowRoute = Workflow['to']
@@ -87,7 +88,7 @@ export function HomePage() {
     { code: 'Δ', title: 'ΕΚΘΕΣΗ ΓΕΝΙΚΩΝ ΣΥΝΕΠΕΙΩΝ', routes: [] },
     { code: 'Ε', title: 'ΕΚΘΕΣΗ ΔΙΑΒΟΥΛΕΥΣΗΣ', routes: ['/field23'] },
     { code: 'ΣΤ', title: 'ΕΚΘΕΣΗ ΝΟΜΙΜΟΤΗΤΑΣ', routes: [] },
-    { code: 'Ζ', title: 'ΠΙΝΑΚΑΣ ΤΡΟΠΟΠΟΙΟΥΜΕΝΩΝ Ή ΚΑΤΑΡΓΟΥΜΕΝΩΝ ΔΙΑΤΑΞΕΩΝ', routes: [] },
+    { code: 'Ζ', title: 'ΠΙΝΑΚΑΣ ΤΡΟΠΟΠΟΙΟΥΜΕΝΩΝ Ή ΚΑΤΑΡΓΟΥΜΕΝΩΝ ΔΙΑΤΑΞΕΩΝ', routes: ['/field29'] },
     { code: 'Η', title: 'ΕΚΘΕΣΗ ΕΦΑΡΜΟΓΗΣ ΤΗΣ ΡΥΘΜΙΣΗΣ', routes: [] },
   ]
 
