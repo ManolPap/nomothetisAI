@@ -41,6 +41,9 @@ class FeatureSettings(BaseSettings):
     field_6_9_tavily_api_key: SecretStr | None = None
     field_4_openai_model: str = "gpt-4.1"
     field_4_openai_api_key: SecretStr | None = None
+    field_29_openai_model: str | None = None
+    field_29_openai_api_key: SecretStr | None = None
+
 
 class Settings:
     """Root settings container split by scope."""
