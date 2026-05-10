@@ -1528,15 +1528,17 @@ a {
   }
 }
 
-/* Field 4 — optional UI (from main) */
-.field4-result {
+/* Field 4 / Field 29 result panels */
+.field4-result,
+.field29-result {
   margin-top: 1.25rem;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
 }
 
-.field4-result__meta {
+.field4-result__meta,
+.field29-result__meta {
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -1545,7 +1547,8 @@ a {
   color: #555;
 }
 
-.field4-result__meta span {
+.field4-result__meta span,
+.field29-result__meta span {
   display: inline-flex;
   align-items: center;
   min-height: 1.75rem;
@@ -1555,7 +1558,8 @@ a {
   border-radius: 6px;
 }
 
-.field4-result__text {
+.field4-result__text,
+.field29-result__text {
   width: 100%;
   max-height: 520px;
   overflow: auto;
@@ -1569,6 +1573,51 @@ a {
   line-height: 1.65;
   white-space: pre-wrap;
   word-break: break-word;
+}
+
+.field29-table-wrap {
+  width: 100%;
+  max-height: 720px;
+  overflow: auto;
+  border: 1px solid #111827;
+  background: #fff;
+}
+
+.field29-table {
+  width: 100%;
+  min-width: 980px;
+  border-collapse: collapse;
+  table-layout: fixed;
+  color: #111827;
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.field29-table th,
+.field29-table td {
+  border: 1px solid #111827;
+  padding: 0.55rem 0.65rem;
+  vertical-align: top;
+}
+
+.field29-table th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: #eef2f3;
+  text-align: center;
+  font-weight: 700;
+}
+
+.field29-table td {
+  background: #fff;
+  text-align: left;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.field29-table__blank-line {
+  min-height: 0.75rem;
 }
 
 .no-data-warning {
