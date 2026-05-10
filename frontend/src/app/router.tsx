@@ -5,6 +5,7 @@ import { Field7Page } from '../features/field7/pages/Field7Page'
 import { Field9Page } from '../features/field9/pages/Field9Page'
 import { Field23Page } from '../features/field23/pages/Field23Page'
 import { Field29Page } from '../features/field29/pages/Field29Page'
+import { Field30Page } from '../features/field30/pages/Field30Page'
 import { HomePage } from './pages/HomePage'
 
 function Nav() {
@@ -33,6 +34,7 @@ export function AppRouter() {
           <Route path="/field9" element={<Field9Page />} />
           <Route path="/field23" element={<Field23Page />} />
           <Route path="/field29" element={<Field29Page />} />
+          <Route path="/field30" element={<Field30Page />} />
         </Routes>
       </main>
     </BrowserRouter>

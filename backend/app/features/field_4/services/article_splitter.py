@@ -19,10 +19,52 @@ CHAPTER_RE = re.compile(
 )
 
 _PARA_BOUNDARY = re.compile(r"\r?\n(?:\s*\r?\n)+")
+_PAGE_MARKER_RE = re.compile(r"---\s*PAGE\s+\d+\s*---", re.IGNORECASE)
+_PAGE_NUMBER_ONLY_RE = re.compile(r"\d{1,3}")
 
 
 def get_non_empty_lines(text: str) -> list[str]:
     return [line.strip() for line in text.splitlines() if line.strip()]
+
+
+def strip_page_noise(text: str) -> str:
+    lines = text.splitlines()
+    kept: list[str] = []
+
+    for index, line in enumerate(lines):
+        stripped = line.strip()
+
+        if _PAGE_MARKER_RE.fullmatch(stripped):
+            continue
+
+        if _PAGE_NUMBER_ONLY_RE.fullmatch(stripped):
+            prev_line = lines[index - 1].strip() if index > 0 else ""
+            next_line = lines[index + 1].strip() if index + 1 < len(lines) else ""
+            prev_non_empty = next(
+                (lines[j].strip() for j in range(index - 1, -1, -1) if lines[j].strip()),
+                "",
+            )
+            next_non_empty = next(
+                (lines[j].strip() for j in range(index + 1, len(lines)) if lines[j].strip()),
+                "",
+            )
+
+            # Footer/header page numbers are usually isolated between empty lines.
+            if not prev_non_empty and not next_non_empty:
+                continue
+
+            if not prev_line and not next_line:
+                continue
+
+            if (
+                (not prev_non_empty or _PAGE_MARKER_RE.fullmatch(prev_non_empty) is not None)
+                and (not next_non_empty or _PAGE_MARKER_RE.fullmatch(next_non_empty) is not None)
+            ):
+                continue
+
+        kept.append(line)
+
+    return "\n".join(kept)
 
 
 def get_title_and_body(article_block: str) -> tuple[str, str]:
@@ -165,6 +207,7 @@ def get_part_and_chapter_titles(
 
 
 def split_articles(main_body: str) -> list[dict]:
+    main_body = strip_page_noise(main_body)
     article_matches = list(ARTICLE_RE.finditer(main_body))
     articles = []
 

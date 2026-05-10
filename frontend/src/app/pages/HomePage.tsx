@@ -73,6 +73,7 @@ export function HomePage() {
     { to: '/field9', title: 'Πεδίο 9', description: 'Ειδικότεροι στόχοι ανάλογα με τον τομέα νομοθέτησης.', requiresBothPdfs: true, requiresFinalPdf: false },
     { to: '/field23', title: 'Πεδίο 23', description: 'Σχόλια στο πλαίσιο της διαβούλευσης μέσω της ηλεκτρονικής πλατφόρμας www.opengov.gr.', requiresBothPdfs: true, requiresFinalPdf: false },
     { to: '/field29', title: 'Πεδίο 29', description: 'Τροποποίηση - Αντικατάσταση - Συπλήρωση Διατάξεων', requiresBothPdfs: false, requiresFinalPdf: true },
+    { to: '/field30', title: 'Πεδίο 30', description: 'Κατάργηση Διατάξεων', requiresBothPdfs: false, requiresFinalPdf: true },
   ] as const
   type Workflow = typeof workflows[number]
   type WorkflowRoute = Workflow['to']
@@ -88,7 +89,7 @@ export function HomePage() {
     { code: 'Δ', title: 'ΕΚΘΕΣΗ ΓΕΝΙΚΩΝ ΣΥΝΕΠΕΙΩΝ', routes: [] },
     { code: 'Ε', title: 'ΕΚΘΕΣΗ ΔΙΑΒΟΥΛΕΥΣΗΣ', routes: ['/field23'] },
     { code: 'ΣΤ', title: 'ΕΚΘΕΣΗ ΝΟΜΙΜΟΤΗΤΑΣ', routes: [] },
-    { code: 'Ζ', title: 'ΠΙΝΑΚΑΣ ΤΡΟΠΟΠΟΙΟΥΜΕΝΩΝ Ή ΚΑΤΑΡΓΟΥΜΕΝΩΝ ΔΙΑΤΑΞΕΩΝ', routes: ['/field29'] },
+    { code: 'Ζ', title: 'ΠΙΝΑΚΑΣ ΤΡΟΠΟΠΟΙΟΥΜΕΝΩΝ Ή ΚΑΤΑΡΓΟΥΜΕΝΩΝ ΔΙΑΤΑΞΕΩΝ', routes: ['/field29', '/field30'] },
     { code: 'Η', title: 'ΕΚΘΕΣΗ ΕΦΑΡΜΟΓΗΣ ΤΗΣ ΡΥΘΜΙΣΗΣ', routes: [] },
   ]
 
