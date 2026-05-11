@@ -68,7 +68,7 @@ export function HomePage() {
 
   const workflows = [
     { to: '/field4', title: 'Πεδίο 4', description: 'Νομοθετικές αναφορές.', requiresBothPdfs: false, requiresFinalPdf: true },
-    { to: '/field6', title: 'Πεδίο 6', description: 'Συναφείς Πρακτικές.', requiresBothPdfs: true, requiresFinalPdf: false },
+    { to: '/field6', title: 'Πεδίο 6', description: 'Συναφείς Πρακτικές.', requiresBothPdfs: false, requiresFinalPdf: true },
     { to: '/field7', title: 'Πεδίο 7', description: 'Αντιστοίχιση του νόμου με τους 17 Στόχους Βιώσιμης Ανάπτυξης (SDGs) του ΟΗΕ.', requiresBothPdfs: false, requiresFinalPdf: false },
     { to: '/field9', title: 'Πεδίο 9', description: 'Ειδικότεροι στόχοι ανάλογα με τον τομέα νομοθέτησης.', requiresBothPdfs: true, requiresFinalPdf: false },
     { to: '/field23', title: 'Πεδίο 23', description: 'Σχόλια στο πλαίσιο της διαβούλευσης μέσω της ηλεκτρονικής πλατφόρμας www.opengov.gr.', requiresBothPdfs: true, requiresFinalPdf: false },
@@ -99,7 +99,9 @@ export function HomePage() {
     const needsFinalPdf = requiresFinalPdf
 
     if (to === '/field6') {
-      const canEnter = canProceed || field6Card.hasSavedSession
+      const hasFinalPdf = Boolean(finalLawFile)
+      const startDisabled = needsFinalPdf && !hasFinalPdf
+      const canEnter = hasFinalPdf || field6Card.hasSavedSession
       return (
         <article key={to} className="workflow-card workflow-card--field6">
           <h3>{title}</h3>
@@ -124,10 +126,10 @@ export function HomePage() {
             </>
           ) : (
             <Link
-              className={`btn btn-primary${needsPdfs && !canProceed ? ' btn-disabled' : ''}`}
+              className={`btn btn-primary${startDisabled ? ' btn-disabled' : ''}`}
               to={to}
-              aria-disabled={needsPdfs && !canProceed}
-              onClick={(e) => { if (needsPdfs && !canProceed) e.preventDefault() }}
+              aria-disabled={startDisabled}
+              onClick={(e) => { if (startDisabled) e.preventDefault() }}
             >
               {field6Card.hasSavedSession ? 'Συνέχιση ροής' : 'Εκκίνηση ροής'}
             </Link>
