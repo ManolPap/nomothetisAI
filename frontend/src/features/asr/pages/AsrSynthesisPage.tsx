@@ -1,5 +1,7 @@
 import { Link } from 'react-router-dom'
 import { type ReactNode, useEffect, useState } from 'react'
+import { ConsultationReportPreviewTable } from '../../field23/components/ConsultationReportPreviewTable'
+import type { ConsultationReportArticleSection } from '../../field23/types'
 
 const FIELD6_STORAGE_KEY = 'nomothetis-field6-session-v1'
 const FIELD7_STORAGE_KEY = 'nomothetis-field7-session-v1'
@@ -146,19 +148,53 @@ function readField9(): Field9Data | null {
 
 interface Field23Data {
   previewText: string
+  articles_section: ConsultationReportArticleSection[]
+  participantsTotal: number
+}
+
+function reviveField23Articles(raw: unknown): ConsultationReportArticleSection[] {
+  if (!Array.isArray(raw)) return []
+  const out: ConsultationReportArticleSection[] = []
+  for (const row of raw) {
+    if (!row || typeof row !== 'object') continue
+    const r = row as Record<string, unknown>
+    out.push({
+      article_number:
+        typeof r.article_number === 'string' ? r.article_number : String(r.article_number ?? ''),
+      article_title: typeof r.article_title === 'string' ? r.article_title : '',
+      comment_count: typeof r.comment_count === 'number' ? r.comment_count : 0,
+      adopted_count: typeof r.adopted_count === 'number' ? r.adopted_count : 0,
+      not_adopted_count: typeof r.not_adopted_count === 'number' ? r.not_adopted_count : 0,
+      adopted_summary: typeof r.adopted_summary === 'string' ? r.adopted_summary : '',
+      not_adopted_summary: typeof r.not_adopted_summary === 'string' ? r.not_adopted_summary : '',
+    })
+  }
+  return out
 }
 
 function readField23(): Field23Data | null {
   const data = readJson(FIELD23_STORAGE_KEY) as
-    | { reportDraft?: { final_preview_text?: unknown } | null }
+    | {
+        reportDraft?: {
+          final_preview_text?: unknown
+          articles_section?: unknown
+          totals?: { participants_total?: unknown }
+        } | null
+      }
     | null
   if (!data || typeof data !== 'object') return null
+  const draft = data.reportDraft && typeof data.reportDraft === 'object' ? data.reportDraft : null
   const previewText =
-    data.reportDraft && typeof data.reportDraft === 'object' && typeof data.reportDraft.final_preview_text === 'string'
-      ? data.reportDraft.final_preview_text
-      : ''
-  if (!previewText.trim()) return null
-  return { previewText }
+    draft && typeof draft.final_preview_text === 'string' ? draft.final_preview_text : ''
+  const articles_section = reviveField23Articles(draft?.articles_section)
+  const participantsTotal =
+    draft?.totals &&
+    typeof draft.totals === 'object' &&
+    typeof draft.totals.participants_total === 'number'
+      ? draft.totals.participants_total
+      : 0
+  if (!previewText.trim() && articles_section.length === 0) return null
+  return { previewText, articles_section, participantsTotal }
 }
 
 function EmptySection() {
@@ -287,6 +323,16 @@ function Field9Section({ data }: { data: Field9Data }) {
 }
 
 function Field23Section({ data }: { data: Field23Data }) {
+  if (data.articles_section.length > 0) {
+    return (
+      <div className="asr-section__body">
+        <ConsultationReportPreviewTable
+          participantsTotal={data.participantsTotal}
+          articles={data.articles_section}
+        />
+      </div>
+    )
+  }
   return (
     <div className="asr-section__body">
       <pre className="asr-section__pre asr-section__pre--block">{data.previewText}</pre>
