@@ -350,6 +350,12 @@ export function HomePage() {
           Τελικός: {finalLawFile ? finalLawFile.name : 'Δεν έχει επιλεγεί αρχείο'}
         </div>
       </div>
+
+      <div className="home-page__asr-cta">
+        <Link to="/asr-synthesis" className="btn btn-primary">
+          Σύνθεση ΑΣΡ →
+        </Link>
+      </div>
     </section>
   )
 }
