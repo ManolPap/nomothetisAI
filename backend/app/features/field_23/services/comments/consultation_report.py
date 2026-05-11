@@ -22,8 +22,15 @@ from app.features.field_23.services.comments.loader import load_stored_legislati
 logger = logging.getLogger(__name__)
 
 _MAX_SUMMARY_WORDS = 250
-_DEFAULT_MODEL = "gemini-2.0-flash"
 _LLM_SEM = asyncio.Semaphore(4)
+
+
+def _effective_gemini_model(model_name: str | None) -> str:
+    """Per-request override, else FEATURE_FIELD_23_COMMENT_ATTRIBUTION_MODEL (Field 23 Gemini)."""
+    stripped = (model_name or "").strip()
+    if stripped:
+        return stripped
+    return settings.feature.field_23_comment_attribution_model
 
 
 class ConsultationReportValidationError(ValueError):
@@ -182,7 +189,7 @@ async def _synthesize_article(
         )
 
     try:
-        summary = await _llm_summarize_article(item, model_name or _DEFAULT_MODEL)
+        summary = await _llm_summarize_article(item, _effective_gemini_model(model_name))
         return _SynthResult(
             adopted_summary=summary.adopted_summary.strip(),
             not_adopted_summary=summary.not_adopted_summary.strip(),

@@ -35,7 +35,8 @@ class FeatureSettings(BaseSettings):
     )
 
     field_23_google_api_key: SecretStr | None = None
-    field_23_comment_attribution_model: str = "gemini-2.0-flash"
+    # Gemini model for Field 23: comment attribution and consultation report synthesis.
+    field_23_comment_attribution_model: str = "gemini-2.5-flash"
     field_23_legal_analyzer_cache_dir: str | None = None
     field_6_9_google_api_key: SecretStr | None = None
     field_6_9_tavily_api_key: SecretStr | None = None
