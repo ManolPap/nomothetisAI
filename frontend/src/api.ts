@@ -1,6 +1,6 @@
-const trimTrailingSlash = (value: string): string => value.replace(/\/+$/, '')
+import { env } from './app/config/env'
 
-export const API_BASE_URL = trimTrailingSlash(import.meta.env.VITE_API_BASE_URL)
+export const API_BASE_URL = env.apiBase
 
 export const apiUrl = (path: string): string => {
   const normalizedPath = path.startsWith('/') ? path : `/${path}`

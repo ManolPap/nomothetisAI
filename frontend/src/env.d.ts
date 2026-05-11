@@ -1,7 +1,8 @@
 /// <reference types="vite/client" />
 
 interface ImportMetaEnv {
-  readonly VITE_API_BASE_URL: string
+  /** Public API origin (no trailing slash). Set on Vercel to your deployed API; redeploy after changes. */
+  readonly VITE_API_BASE?: string
 }
 
 interface ImportMeta {
