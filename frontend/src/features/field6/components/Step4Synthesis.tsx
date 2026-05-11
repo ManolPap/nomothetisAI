@@ -18,6 +18,10 @@ interface SynthesisParts {
   iii: string
 }
 
+function stripLeadingHeader(part: string): string {
+  return part.replace(/^(?:Χώρες ΕΕ\/ΟΟΣΑ|Όργανα ΕΕ|Διεθνείς Οργανισμοί)[^\n]*\n+/, '').trimStart()
+}
+
 function parseSynthesisText(text: string): SynthesisParts {
   const normalized = text.replace(/\r\n/g, '\n')
   const iMatch = normalized.match(/i\)\s*([\s\S]*?)(?=\nii\)|$)/)
@@ -25,9 +29,9 @@ function parseSynthesisText(text: string): SynthesisParts {
   const iiiMatch = normalized.match(/iii\)\s*([\s\S]*?)$/)
 
   return {
-    i: iMatch?.[1]?.trim() ?? '',
-    ii: iiMatch?.[1]?.trim() ?? '',
-    iii: iiiMatch?.[1]?.trim() ?? '',
+    i: stripLeadingHeader(iMatch?.[1]?.trim() ?? ''),
+    ii: stripLeadingHeader(iiMatch?.[1]?.trim() ?? ''),
+    iii: stripLeadingHeader(iiiMatch?.[1]?.trim() ?? ''),
   }
 }
 

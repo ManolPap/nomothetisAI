@@ -86,31 +86,18 @@ export function Step1Upload({ state, dispatch }: Props) {
             ] as [keyof LawMetadata, string][]).map(([key, label]) => (
               <label key={key} className="form-field">
                 <span className="form-field__label">{label}</span>
-                {key === 'ministry' || key === 'sector' ? (
-                  <input
-                    className="form-field__input"
-                    type="text"
-                    value={String(editedMetadata[key] ?? '')}
-                    onChange={(e) => handleMetadataChange(key, e.target.value)}
-                  />
-                ) : (
-                  <textarea
-                    className="form-field__textarea"
-                    rows={3}
-                    value={String(editedMetadata[key] ?? '')}
-                    onChange={(e) => handleMetadataChange(key, e.target.value)}
-                  />
-                )}
+                <textarea
+                  className="form-field__textarea"
+                  rows={1}
+                  value={String(editedMetadata[key] ?? '')}
+                  ref={(el) => { if (el) { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px' } }}
+                  onInput={(e) => { const el = e.currentTarget; el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px' }}
+                  style={{ resize: 'none', overflow: 'hidden', minHeight: '36px' }}
+                  onChange={(e) => handleMetadataChange(key, e.target.value)}
+                />
               </label>
             ))}
           </div>
-
-          {state.nimText && (
-            <div className="nim-text-block">
-              <h4>Κείμενο NIM</h4>
-              <pre className="nim-text-block__pre">{state.nimText}</pre>
-            </div>
-          )}
         </div>
       )}
     </StepContainer>
