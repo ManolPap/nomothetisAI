@@ -1,4 +1,4 @@
-import { type Dispatch, useEffect } from 'react'
+import { type Dispatch, useCallback, useEffect } from 'react'
 import { StepHeader } from '../../../shared/ui/StepHeader'
 import { StepContainer } from '../../../shared/ui/StepContainer'
 import { LoadingPanel } from '../../../shared/ui/LoadingPanel'
@@ -75,22 +75,33 @@ interface Props {
   dispatch: Dispatch<Field6Action>
 }
 
+/** Φράζει ταυτόχρονο διπλό web-search (React Strict Mode dev ή διπλό effect πριν προλάβει το loading state). */
+let field6WebSearchInFlight = false
+
 export function Step2WebFacts({ state, dispatch }: Props) {
-  async function fetchFacts() {
-    if (!state.metadata || !state.nimText) return
+  const fetchFacts = useCallback(async () => {
+    const meta = state.metadata
+    const nim = state.nimText
+    if (!meta || !nim.trim()) return
+    if (field6WebSearchInFlight) return
+    field6WebSearchInFlight = true
     dispatch({ type: 'WEB_LOADING' })
     try {
-      const result = await webSearch({ metadata: state.metadata, nim_text: state.nimText })
+      const result = await webSearch({ metadata: meta, nim_text: nim })
       dispatch({ type: 'WEB_SUCCESS', payload: result })
     } catch (e) {
       const msg = isApiError(e) ? e.userMessage() : 'Άγνωστο σφάλμα'
       dispatch({ type: 'WEB_ERROR', error: msg })
+    } finally {
+      field6WebSearchInFlight = false
     }
-  }
+  }, [dispatch, state.metadata, state.nimText])
 
-  // Auto-fetch on mount if not yet done
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { if (state.webStatus === 'idle') fetchFacts() }, [])
+  useEffect(() => {
+    if (state.webStatus !== 'idle') return
+    if (!state.metadata || !state.nimText.trim()) return
+    void fetchFacts()
+  }, [fetchFacts, state.metadata, state.nimText, state.webStatus])
 
   const factItems =
     state.facts != null
