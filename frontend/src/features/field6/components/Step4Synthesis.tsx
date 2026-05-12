@@ -1,4 +1,5 @@
 import { type Dispatch, useEffect, useState } from 'react'
+import { flushSync } from 'react-dom'
 import { StepHeader } from '../../../shared/ui/StepHeader'
 import { StepContainer } from '../../../shared/ui/StepContainer'
 import { ErrorBanner } from '../../../shared/ui/ErrorBanner'
@@ -44,8 +45,13 @@ function buildSynthesisText(parts: SynthesisParts): string {
   return `6. Συναφείς Πρακτικές\ni) ${parts.i}\nii) ${parts.ii}\niii) ${parts.iii}`
 }
 
+/** Μπλοκάρει διπλό κλικ πριν προλάβει το reducer να ενημερώσει synthesisStatus → loading. */
+let field6SynthesisInFlight = false
+
 export function Step4Synthesis({ state, dispatch }: Props) {
   const [hasRun, setHasRun] = useState(state.synthesisStatus === 'ready')
+  /** Συγχρονισμένο «busy» ώστε τα κουμπιά να κλειδώνουν πριν προλάβει paint χωρίς loading στο reducer. */
+  const [synthesisPending, setSynthesisPending] = useState(false)
   const [parts, setParts] = useState<SynthesisParts>(() => parseSynthesisText(state.synthesisText))
 
   useEffect(() => {
@@ -54,35 +60,41 @@ export function Step4Synthesis({ state, dispatch }: Props) {
 
   async function runSynthesis() {
     if (!state.metadata || !state.factsText) return
+    if (field6SynthesisInFlight) return
+    field6SynthesisInFlight = true
 
-    const structuredCount =
-      state.facts != null
-        ? state.facts.i.length + state.facts.ii.length + state.facts.iii.length
-        : 0
-    const fromStructured =
-      structuredCount > 0
-        ? buildSelectedFactsTextFromStructured(state.facts, state.selectedFactIndices)
-        : null
-    const parsedFacts = parseFactsText(state.factsText)
-    const selectedFacts =
-      fromStructured ??
-      (parsedFacts
-        ? parsedFacts.filter((_, i) => state.selectedFactIndices.has(i)).join('\n')
-        : state.factsText)
+    flushSync(() => {
+      setSynthesisPending(true)
+      dispatch({ type: 'SYNTHESIS_LOADING' })
+    })
 
-    const selectedEntries = Object.entries(state.eurostatData)
-      .filter(([code]) => state.selectedCountryCodes.has(code))
-      .map(([code, entry]) => ({
-        countryCode: code,
-        entry,
-        selectedYears: Array.from(state.selectedYearsByCountry[code] ?? []),
-      }))
-
-    const eurostatText = buildEurostatText(state.indicatorName, selectedEntries)
-    const selectedSources = buildSelectedSources(state.sources, state.selectedSourceUrls)
-
-    dispatch({ type: 'SYNTHESIS_LOADING' })
     try {
+      const structuredCount =
+        state.facts != null
+          ? state.facts.i.length + state.facts.ii.length + state.facts.iii.length
+          : 0
+      const fromStructured =
+        structuredCount > 0
+          ? buildSelectedFactsTextFromStructured(state.facts, state.selectedFactIndices)
+          : null
+      const parsedFacts = parseFactsText(state.factsText)
+      const selectedFacts =
+        fromStructured ??
+        (parsedFacts
+          ? parsedFacts.filter((_, i) => state.selectedFactIndices.has(i)).join('\n')
+          : state.factsText)
+
+      const selectedEntries = Object.entries(state.eurostatData)
+        .filter(([code]) => state.selectedCountryCodes.has(code))
+        .map(([code, entry]) => ({
+          countryCode: code,
+          entry,
+          selectedYears: Array.from(state.selectedYearsByCountry[code] ?? []),
+        }))
+
+      const eurostatText = buildEurostatText(state.indicatorName, selectedEntries)
+      const selectedSources = buildSelectedSources(state.sources, state.selectedSourceUrls)
+
       const result = await synthesizeField6({
         metadata: state.metadata,
         facts_text: selectedFacts,
@@ -94,10 +106,13 @@ export function Step4Synthesis({ state, dispatch }: Props) {
     } catch (e) {
       const msg = isApiError(e) ? e.userMessage() : 'Άγνωστο σφάλμα'
       dispatch({ type: 'SYNTHESIS_ERROR', error: msg })
+    } finally {
+      field6SynthesisInFlight = false
+      setSynthesisPending(false)
     }
   }
 
-  const isLoading = state.synthesisStatus === 'loading'
+  const isLoading = state.synthesisStatus === 'loading' || synthesisPending
 
   function updatePart(partKey: keyof SynthesisParts, value: string) {
     setParts((prev) => {
@@ -139,7 +154,12 @@ export function Step4Synthesis({ state, dispatch }: Props) {
 
       {state.synthesisStatus === 'ready' && (
         <div className="synthesis-result">
-          <button type="button" className="btn btn-secondary btn-sm" onClick={runSynthesis}>
+          <button
+            type="button"
+            className="btn btn-secondary btn-sm"
+            onClick={runSynthesis}
+            disabled={isLoading}
+          >
             Εκ νέου Σύνθεση
           </button>
           <table className="field6-synthesis-table">

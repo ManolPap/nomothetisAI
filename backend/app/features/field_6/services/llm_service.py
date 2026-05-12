@@ -24,11 +24,23 @@ from app.features.field_6.schemas import FactItem, FactsPayload
 
 
 class _FactRow(BaseModel):
-    subject: str = Field(default="", description="Χώρα/λίστα, όργανο ΕΕ ή διεθνής οργανισμός")
-    instrument: str = Field(default="", description="Νόμος, οδηγία, τίτλος")
-    finding: str = Field(default="", description="Εύρημα όπως στην πηγή")
-    source_url: str = Field(default="", description="URL")
-    source_title: str | None = Field(default=None, description="Τίτλος πηγής")
+    subject: str = Field(
+        default="",
+        description="Χώρα/λίστα, όργανο ΕΕ ή διεθνής οργανισμός — κείμενο στα ελληνικά",
+    )
+    instrument: str = Field(
+        default="",
+        description="Νόμος, οδηγία, τίτλος — κείμενο στα ελληνικά",
+    )
+    finding: str = Field(
+        default="",
+        description="Εύρημα όπως στην πηγή — διατύπωση στα ελληνικά",
+    )
+    source_url: str = Field(default="", description="URL (ως έχει)")
+    source_title: str | None = Field(
+        default=None,
+        description="Τίτλος πηγής στα ελληνικά αν χρειάζεται μετάφραση",
+    )
 
 
 class _FactsExtractionOut(BaseModel):
