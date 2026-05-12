@@ -21,7 +21,8 @@ from app.features.field_23.services.documents.split_text.preprocess import (
     remove_trailing_signature_block,
 )
 
-# Fuse-split only near the top of an article block (before long body); avoids false splits in citations.
+# Fuse-split only near the top of an article block (before long body).
+# Avoids false splits when scanning deep into the body for citations.
 _MAX_TITLE_FUSE_SCAN_LINES = 25
 
 

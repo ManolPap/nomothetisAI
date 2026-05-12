@@ -32,8 +32,8 @@ _OPERATIVE_LEAD = (
     r")"
 )
 
-# Inline fuse: same physical line glues τίτλος + operative. Split after:
-# 1) …YYYY/ZZZZ)  2) …ν. NNNN/YYYY  3) space before dispositive verb (nominative τίτλος → "Δημιουργείται…").
+# Inline fuse: same physical line glues τίτλος + operative. Split after: 1) …YYYY/ZZZZ)
+# 2) …ν. NNNN/YYYY  3) space before dispositive verb (nominative τίτλος, then «Δημιουργείται…»).
 TITLE_BODY_INLINE_SPLIT_RE = re.compile(
     rf"(?:"
     rf"(?<=\d{{4}}/\d{{4}}\))"
