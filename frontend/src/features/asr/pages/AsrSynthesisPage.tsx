@@ -2,6 +2,14 @@ import { Link } from 'react-router-dom'
 import { type ReactNode, useEffect, useState } from 'react'
 import { ConsultationReportPreviewTable } from '../../field23/components/ConsultationReportPreviewTable'
 import type { ConsultationReportArticleSection } from '../../field23/types'
+import type { AnalyzeField4Response } from '../../field4/types'
+import type { AnalyzeField29Response } from '../../field29/types'
+import type { AnalyzeField30Response } from '../../field30/types'
+import { Field29ResultTable } from '../../field29/components/Field29ResultTable'
+import { Field30ResultTable } from '../../field30/components/Field30ResultTable'
+import { field4PersistEventName, readField4HomeMeta } from '../../field4/state/persist'
+import { field29PersistEventName, readField29HomeMeta } from '../../field29/state/persist'
+import { field30PersistEventName, readField30HomeMeta } from '../../field30/state/persist'
 
 const FIELD6_STORAGE_KEY = 'nomothetis-field6-session-v1'
 const FIELD7_STORAGE_KEY = 'nomothetis-field7-session-v1'
@@ -52,6 +60,15 @@ function readJson(key: string): unknown {
 
 function stripLeadingHeader(part: string): string {
   return part.replace(/^(?:Χώρες ΕΕ\/ΟΟΣΑ|Όργανα ΕΕ|Διεθνείς Οργανισμοί)[^\n]*\n+/, '').trimStart()
+}
+
+interface Field4Data {
+  result: AnalyzeField4Response
+}
+
+function readField4(): Field4Data | null {
+  const result = readField4HomeMeta().result
+  return result ? { result } : null
 }
 
 function parseSynthesisText(text: string): SynthesisParts {
@@ -197,8 +214,39 @@ function readField23(): Field23Data | null {
   return { previewText, articles_section, participantsTotal }
 }
 
+interface Field29Data {
+  result: AnalyzeField29Response
+}
+
+function readField29(): Field29Data | null {
+  const result = readField29HomeMeta().result
+  return result ? { result } : null
+}
+
+interface Field30Data {
+  result: AnalyzeField30Response
+}
+
+function readField30(): Field30Data | null {
+  const result = readField30HomeMeta().result
+  return result ? { result } : null
+}
+
 function EmptySection() {
   return <p className="asr-section__empty">Δεν έχει ολοκληρωθεί ακόμα</p>
+}
+
+function Field4Section({ data }: { data: Field4Data }) {
+  const { result } = data
+  return (
+    <div className="asr-section__body">
+      <div className="field4-result__meta">
+        <span>{result.filename}</span>
+        <span>{result.articles_count} άρθρα</span>
+      </div>
+      <pre className="field4-result__text">{result.field_4_answer}</pre>
+    </div>
+  )
 }
 
 function Field6Section({ data }: { data: Field6Data }) {
@@ -340,36 +388,82 @@ function Field23Section({ data }: { data: Field23Data }) {
   )
 }
 
+function Field29Section({ data }: { data: Field29Data }) {
+  const { result } = data
+  return (
+    <div className="asr-section__body">
+      <div className="field29-result__meta">
+        <span>{result.filename}</span>
+        <span>{result.articles_count} άρθρα</span>
+        <span>{result.field_29_articles_count} σχετικά με το Πεδίο 29</span>
+      </div>
+      <Field29ResultTable value={result.field_29_answer} rows={result.field_29_rows} />
+    </div>
+  )
+}
+
+function Field30Section({ data }: { data: Field30Data }) {
+  const { result } = data
+  return (
+    <div className="asr-section__body">
+      <div className="field29-result__meta">
+        <span>{result.filename}</span>
+        <span>{result.articles_count} άρθρα</span>
+        <span>{result.field_30_articles_count} σχετικά με το Πεδίο 30</span>
+      </div>
+      <Field30ResultTable rows={result.field_30_rows} fallbackText={result.field_30_answer} />
+    </div>
+  )
+}
+
 export function AsrSynthesisPage() {
+  const [field4, setField4] = useState<Field4Data | null>(() => readField4())
   const [field6, setField6] = useState<Field6Data | null>(() => readField6())
   const [field7, setField7] = useState<Field7Data | null>(() => readField7())
   const [field9, setField9] = useState<Field9Data | null>(() => readField9())
   const [field23, setField23] = useState<Field23Data | null>(() => readField23())
+  const [field29, setField29] = useState<Field29Data | null>(() => readField29())
+  const [field30, setField30] = useState<Field30Data | null>(() => readField30())
 
   useEffect(() => {
+    const refresh4 = () => setField4(readField4())
     const refresh6 = () => setField6(readField6())
     const refresh7 = () => setField7(readField7())
     const refresh9 = () => setField9(readField9())
     const refresh23 = () => setField23(readField23())
+    const refresh29 = () => setField29(readField29())
+    const refresh30 = () => setField30(readField30())
 
+    window.addEventListener(field4PersistEventName(), refresh4)
     window.addEventListener(FIELD6_PERSIST_EVENT, refresh6)
     window.addEventListener(FIELD7_PERSIST_EVENT, refresh7)
     window.addEventListener(FIELD9_PERSIST_EVENT, refresh9)
     window.addEventListener(FIELD23_PERSIST_EVENT, refresh23)
+    window.addEventListener(field29PersistEventName(), refresh29)
+    window.addEventListener(field30PersistEventName(), refresh30)
+    window.addEventListener('storage', refresh4)
     window.addEventListener('storage', refresh6)
     window.addEventListener('storage', refresh7)
     window.addEventListener('storage', refresh9)
     window.addEventListener('storage', refresh23)
+    window.addEventListener('storage', refresh29)
+    window.addEventListener('storage', refresh30)
 
     return () => {
+      window.removeEventListener(field4PersistEventName(), refresh4)
       window.removeEventListener(FIELD6_PERSIST_EVENT, refresh6)
       window.removeEventListener(FIELD7_PERSIST_EVENT, refresh7)
       window.removeEventListener(FIELD9_PERSIST_EVENT, refresh9)
       window.removeEventListener(FIELD23_PERSIST_EVENT, refresh23)
+      window.removeEventListener(field29PersistEventName(), refresh29)
+      window.removeEventListener(field30PersistEventName(), refresh30)
+      window.removeEventListener('storage', refresh4)
       window.removeEventListener('storage', refresh6)
       window.removeEventListener('storage', refresh7)
       window.removeEventListener('storage', refresh9)
       window.removeEventListener('storage', refresh23)
+      window.removeEventListener('storage', refresh29)
+      window.removeEventListener('storage', refresh30)
     }
   }, [])
 
@@ -378,6 +472,11 @@ export function AsrSynthesisPage() {
     title: string
     content: ReactNode
   }> = [
+    {
+      code: 'Πεδίο 4',
+      title: 'Νομοθετικές αναφορές',
+      content: field4 ? <Field4Section data={field4} /> : <EmptySection />,
+    },
     {
       code: 'Πεδίο 6',
       title: 'Συναφείς Πρακτικές',
@@ -397,6 +496,16 @@ export function AsrSynthesisPage() {
       code: 'Πεδίο 23',
       title: 'Σχόλια στο πλαίσιο της διαβούλευσης (www.opengov.gr)',
       content: field23 ? <Field23Section data={field23} /> : <EmptySection />,
+    },
+    {
+      code: 'Πεδίο 29',
+      title: 'Τροποποίηση - Αντικατάσταση - Συμπλήρωση Διατάξεων',
+      content: field29 ? <Field29Section data={field29} /> : <EmptySection />,
+    },
+    {
+      code: 'Πεδίο 30',
+      title: 'Κατάργηση Διατάξεων',
+      content: field30 ? <Field30Section data={field30} /> : <EmptySection />,
     },
   ]
 

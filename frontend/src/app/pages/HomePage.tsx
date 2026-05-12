@@ -1,12 +1,22 @@
 import { Link } from 'react-router-dom'
-import { useEffect, useState } from 'react'
+import { type ReactNode, useEffect, useState } from 'react'
 import { useLawFiles } from '../providers/LawFilesProvider'
 import { FileUploader } from '../../shared/ui/FileUploader'
+import type { AnalyzeField4Response } from '../../features/field4/types'
+import type { AnalyzeField29Response } from '../../features/field29/types'
+import type { AnalyzeField30Response } from '../../features/field30/types'
+import { Field29ResultTable } from '../../features/field29/components/Field29ResultTable'
+import { Field30ResultTable } from '../../features/field30/components/Field30ResultTable'
 import {
   clearField23Persisted,
   field23PersistEventName,
   readField23HomeMeta,
 } from '../../features/field23/state/persist'
+import {
+  clearField4Persisted,
+  field4PersistEventName,
+  readField4HomeMeta,
+} from '../../features/field4/state/persist'
 import {
   clearField6Persisted,
   field6PersistEventName,
@@ -22,21 +32,77 @@ import {
   field9PersistEventName,
   readField9HomeMeta,
 } from '../../features/field9/state/persist'
+import {
+  clearField29Persisted,
+  field29PersistEventName,
+  readField29HomeMeta,
+} from '../../features/field29/state/persist'
+import {
+  clearField30Persisted,
+  field30PersistEventName,
+  readField30HomeMeta,
+} from '../../features/field30/state/persist'
+
+function Field4WorkflowResult({ result }: { result: AnalyzeField4Response }) {
+  return (
+    <section className="workflow-card-result" aria-label="Αποτέλεσμα Πεδίου 4">
+      <div className="field4-result__meta">
+        <span>{result.filename}</span>
+        <span>{result.articles_count} άρθρα</span>
+      </div>
+      <pre className="field4-result__text">{result.field_4_answer}</pre>
+    </section>
+  )
+}
+
+function Field29WorkflowResult({ result }: { result: AnalyzeField29Response }) {
+  return (
+    <section className="workflow-card-result" aria-label="Αποτέλεσμα Πεδίου 29">
+      <div className="field29-result__meta">
+        <span>{result.filename}</span>
+        <span>{result.articles_count} άρθρα</span>
+        <span>{result.field_29_articles_count} σχετικά με το Πεδίο 29</span>
+      </div>
+      <Field29ResultTable value={result.field_29_answer} rows={result.field_29_rows} />
+    </section>
+  )
+}
+
+function Field30WorkflowResult({ result }: { result: AnalyzeField30Response }) {
+  return (
+    <section className="workflow-card-result" aria-label="Αποτέλεσμα Πεδίου 30">
+      <div className="field29-result__meta">
+        <span>{result.filename}</span>
+        <span>{result.articles_count} άρθρα</span>
+        <span>{result.field_30_articles_count} σχετικά με το Πεδίο 30</span>
+      </div>
+      <Field30ResultTable rows={result.field_30_rows} fallbackText={result.field_30_answer} />
+    </section>
+  )
+}
 
 export function HomePage() {
   const { initialLawFile, finalLawFile, setInitialLawFile, setFinalLawFile } = useLawFiles()
   const canProceed = Boolean(initialLawFile && finalLawFile)
+  const [field4Card, setField4Card] = useState(() => readField4HomeMeta())
   const [field23Card, setField23Card] = useState(() => readField23HomeMeta())
   const [field6Card, setField6Card] = useState(() => readField6HomeMeta())
   const [field7Card, setField7Card] = useState(() => readField7HomeMeta())
   const [field9Card, setField9Card] = useState(() => readField9HomeMeta())
+  const [field29Card, setField29Card] = useState(() => readField29HomeMeta())
+  const [field30Card, setField30Card] = useState(() => readField30HomeMeta())
 
   useEffect(() => {
+    const refresh4 = () => setField4Card(readField4HomeMeta())
     const refresh23 = () => setField23Card(readField23HomeMeta())
     const refresh6 = () => setField6Card(readField6HomeMeta())
     const refresh7 = () => setField7Card(readField7HomeMeta())
     const refresh9 = () => setField9Card(readField9HomeMeta())
+    const refresh29 = () => setField29Card(readField29HomeMeta())
+    const refresh30 = () => setField30Card(readField30HomeMeta())
 
+    window.addEventListener(field4PersistEventName(), refresh4)
+    window.addEventListener('storage', refresh4)
     window.addEventListener(field23PersistEventName(), refresh23)
     window.addEventListener('storage', refresh23)
     window.addEventListener(field6PersistEventName(), refresh6)
@@ -45,8 +111,14 @@ export function HomePage() {
     window.addEventListener('storage', refresh7)
     window.addEventListener(field9PersistEventName(), refresh9)
     window.addEventListener('storage', refresh9)
+    window.addEventListener(field29PersistEventName(), refresh29)
+    window.addEventListener('storage', refresh29)
+    window.addEventListener(field30PersistEventName(), refresh30)
+    window.addEventListener('storage', refresh30)
 
     return () => {
+      window.removeEventListener(field4PersistEventName(), refresh4)
+      window.removeEventListener('storage', refresh4)
       window.removeEventListener(field23PersistEventName(), refresh23)
       window.removeEventListener('storage', refresh23)
       window.removeEventListener(field6PersistEventName(), refresh6)
@@ -55,6 +127,10 @@ export function HomePage() {
       window.removeEventListener('storage', refresh7)
       window.removeEventListener(field9PersistEventName(), refresh9)
       window.removeEventListener('storage', refresh9)
+      window.removeEventListener(field29PersistEventName(), refresh29)
+      window.removeEventListener('storage', refresh29)
+      window.removeEventListener(field30PersistEventName(), refresh30)
+      window.removeEventListener('storage', refresh30)
     }
   }, [])
 
@@ -82,6 +158,56 @@ export function HomePage() {
     return acc
   }, {} as Record<WorkflowRoute, Workflow>)
 
+  function renderFinalPdfPersistedWorkflowCard(
+    workflow: Workflow,
+    card: { flowCompleted: boolean; hasSavedSession: boolean },
+    clearPersisted: () => void,
+    modifierClass: string,
+    resultContent?: ReactNode,
+  ) {
+    const { to, title, description, requiresFinalPdf } = workflow
+    const hasFinalPdf = Boolean(finalLawFile)
+    const canEnter = !requiresFinalPdf || hasFinalPdf || card.hasSavedSession
+
+    return (
+      <article key={to} className={`workflow-card workflow-card--persisted ${modifierClass}`}>
+        <h3>{title}</h3>
+        <p>{description}</p>
+        {card.flowCompleted ? (
+          <>
+            <div className="workflow-card__actions">
+              <Link
+                className={`btn btn-workflow-home-done${!canEnter ? ' btn-disabled' : ''}`}
+                to={to}
+                aria-disabled={!canEnter}
+                onClick={(e) => { if (!canEnter) e.preventDefault() }}
+              >
+                Ολοκληρώθηκε
+              </Link>
+              <button
+                type="button"
+                className="btn btn-ghost workflow-card__reset"
+                onClick={clearPersisted}
+              >
+                Επαναφορά ροής
+              </button>
+            </div>
+            {resultContent && <div className="workflow-card__result">{resultContent}</div>}
+          </>
+        ) : (
+          <Link
+            className={`btn btn-primary${!canEnter ? ' btn-disabled' : ''}`}
+            to={to}
+            aria-disabled={!canEnter}
+            onClick={(e) => { if (!canEnter) e.preventDefault() }}
+          >
+            {card.hasSavedSession ? 'Συνέχεια ροής' : 'Εκκίνηση ροής'}
+          </Link>
+        )}
+      </article>
+    )
+  }
+
   const sections: Array<{ code: string; title: string; routes: WorkflowRoute[] }> = [
     { code: 'A', title: 'ΑΙΤΙΟΛΟΓΙΚΗ ΕΚΘΕΣΗ', routes: ['/field4', '/field6', '/field7', '/field9'] },
     { code: 'B', title: 'ΕΚΘΕΣΗ ΤΟΥ ΑΡΘΡΟΥ 75 ΠΑΡ. 1 & 2 ΤΟΥ ΣΥΝΤΑΓΜΑΤΟΣ', routes: [] },
@@ -97,6 +223,16 @@ export function HomePage() {
     const { to, title, description, requiresBothPdfs, requiresFinalPdf } = workflow
     const needsPdfs = requiresBothPdfs
     const needsFinalPdf = requiresFinalPdf
+
+    if (to === '/field4') {
+      return renderFinalPdfPersistedWorkflowCard(
+        workflow,
+        field4Card,
+        clearField4Persisted,
+        'workflow-card--field4',
+        field4Card.result ? <Field4WorkflowResult result={field4Card.result} /> : undefined,
+      )
+    }
 
     if (to === '/field6') {
       const hasFinalPdf = Boolean(finalLawFile)
@@ -251,6 +387,26 @@ export function HomePage() {
       )
     }
 
+    if (to === '/field29') {
+      return renderFinalPdfPersistedWorkflowCard(
+        workflow,
+        field29Card,
+        clearField29Persisted,
+        'workflow-card--field29',
+        field29Card.result ? <Field29WorkflowResult result={field29Card.result} /> : undefined,
+      )
+    }
+
+    if (to === '/field30') {
+      return renderFinalPdfPersistedWorkflowCard(
+        workflow,
+        field30Card,
+        clearField30Persisted,
+        'workflow-card--field30',
+        field30Card.result ? <Field30WorkflowResult result={field30Card.result} /> : undefined,
+      )
+    }
+
     const genericDisabled = (needsPdfs && !canProceed) || (needsFinalPdf && !finalLawFile)
 
     return (
@@ -337,7 +493,12 @@ export function HomePage() {
       {!canProceed && (
         <p className="hint-text" role="status">
           Απαιτούνται και τα δύο αρχεία PDF για την συμπλήρωση του πεδίου 23.
-          {(field6Card.hasSavedSession || field9Card.hasSavedSession || field23Card.hasSavedSession) &&
+          {(field4Card.hasSavedSession ||
+            field6Card.hasSavedSession ||
+            field9Card.hasSavedSession ||
+            field23Card.hasSavedSession ||
+            field29Card.hasSavedSession ||
+            field30Card.hasSavedSession) &&
             ' Μπορείτε να συνεχίσετε την αποθηκευμένη σας πρόοδο.'}
         </p>
       )}

@@ -48,6 +48,7 @@ export function Step1Analyze({ state, dispatch }: Props) {
   }, [runAnalysis, state.analyzeStatus, state.file])
 
   const isLoading = state.analyzeStatus === 'loading'
+  const displayedFileName = state.file?.name ?? state.fileMeta?.name
 
   return (
     <StepContainer
@@ -63,9 +64,9 @@ export function Step1Analyze({ state, dispatch }: Props) {
         description="Χρησιμοποιείται το PDF από το πεδίο «Σχέδιο νόμου για την αιτιολογική έκθεση» της αρχικής σελίδας."
       />
 
-      {state.file ? (
+      {displayedFileName ? (
         <div className="status-pill status-pill--ok">
-          PDF: {state.file.name}
+          PDF: {displayedFileName}
         </div>
       ) : (
         <EmptyState message="Επιλέξτε πρώτα το PDF από την αρχική σελίδα." />
