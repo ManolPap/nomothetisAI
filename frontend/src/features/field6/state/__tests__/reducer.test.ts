@@ -18,6 +18,7 @@ describe('field6Reducer', () => {
       metadataStatus: 'ready' as const,
       metadata: mockMetadata,
       webStatus: 'ready' as const,
+      facts: null,
       factsText: 'some facts',
     }
     const next = field6Reducer(stateWithData, { type: 'SET_FILE', file: mockFile })
@@ -34,6 +35,7 @@ describe('field6Reducer', () => {
       metadataStatus: 'ready' as const,
       metadata: mockMetadata,
       webStatus: 'ready' as const,
+      facts: null,
       factsText: 'facts',
       eurostatStatus: 'ready' as const,
       eurostatData: { GR: { name: 'Greece', values: {}, indicator: '', dataset_id: '', url: '' } },

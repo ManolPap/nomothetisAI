@@ -1,10 +1,64 @@
-import type { EurostatCountryEntry, WebSource } from '../types'
+import type { EurostatCountryEntry, FactCategory, FactItem, FactsPayload, WebSource } from '../types'
 
 /**
  * Parse facts_text into an array of individual fact strings.
  * Handles lines prefixed with FACT_i, FACT_ii, FACT_iii, etc., or plain numbered/bullet lines.
  * Returns null if the text cannot be meaningfully parsed.
  */
+export const FACT_CATEGORY_LABELS: Record<FactCategory, string> = {
+  i: 'Χώρες ΕΕ/ΟΟΣΑ',
+  ii: 'Όργανα ΕΕ',
+  iii: 'Διεθνείς Οργανισμοί',
+}
+
+export function factItemToDisplayText(it: FactItem): string {
+  return [it.subject, it.instrument, it.finding, it.source_url]
+    .map((p) => (p ?? '').trim())
+    .filter(Boolean)
+    .join(' | ')
+}
+
+export type FlatFactEntry = { flatIndex: number; category: FactCategory; item: FactItem }
+
+export function flattenField6Facts(facts: FactsPayload | null): FlatFactEntry[] {
+  if (!facts) return []
+  const out: FlatFactEntry[] = []
+  let idx = 0
+  const push = (category: FactCategory, items: FactItem[]) => {
+    for (const item of items) {
+      out.push({ flatIndex: idx++, category, item })
+    }
+  }
+  push('i', facts.i)
+  push('ii', facts.ii)
+  push('iii', facts.iii)
+  return out
+}
+
+function factPrefixForCategory(cat: FactCategory): string {
+  if (cat === 'i') return 'FACT_i'
+  if (cat === 'ii') return 'FACT_ii'
+  return 'FACT_iii'
+}
+
+/** Γραμμές προς σύνθεση από structured facts + επιλεγμένα indices (flatten order). */
+export function buildSelectedFactsTextFromStructured(
+  facts: FactsPayload | null,
+  selectedIndices: Set<number>,
+): string | null {
+  const flat = flattenField6Facts(facts)
+  if (flat.length === 0) return null
+  const lines: string[] = []
+  for (const i of [...selectedIndices].sort((a, b) => a - b)) {
+    const entry = flat[i]
+    if (!entry) continue
+    const p = factPrefixForCategory(entry.category)
+    const it = entry.item
+    lines.push(`${p}: ${it.subject} | ${it.instrument} | ${it.finding} | ${it.source_url}`)
+  }
+  return lines.length > 0 ? lines.join('\n') : null
+}
+
 export function parseFactsText(factsText: string): string[] | null {
   if (!factsText.trim()) return null
 

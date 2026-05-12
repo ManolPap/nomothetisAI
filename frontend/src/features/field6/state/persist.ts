@@ -1,4 +1,4 @@
-import type { EurostatCountryEntry, LawMetadata, WebSource } from '../types'
+import type { EurostatCountryEntry, FactsPayload, LawMetadata, WebSource } from '../types'
 import type { Field6State, StepStatus } from './reducer'
 import { initialField6State } from './reducer'
 
@@ -17,6 +17,7 @@ interface Field6PersistedV1 {
 
   webStatus: StepStatus
   sources: WebSource[]
+  facts?: FactsPayload | null
   factsText: string
   selectedFactIndices: number[]
   selectedSourceUrls: string[]
@@ -57,6 +58,7 @@ export function stateToPersisted(state: Field6State): Field6PersistedV1 {
     metadataError: state.metadataError,
     webStatus: state.webStatus,
     sources: state.sources,
+    facts: state.facts ?? undefined,
     factsText: state.factsText,
     selectedFactIndices: [...state.selectedFactIndices],
     selectedSourceUrls: [...state.selectedSourceUrls],
@@ -98,6 +100,7 @@ export function persistedToState(p: Field6PersistedV1): Field6State {
     metadataError: p.metadataError ?? null,
     webStatus,
     sources: Array.isArray(p.sources) ? p.sources : [],
+    facts: p.facts ?? null,
     factsText: p.factsText ?? '',
     selectedFactIndices: new Set(Array.isArray(p.selectedFactIndices) ? p.selectedFactIndices : []),
     selectedSourceUrls: new Set(Array.isArray(p.selectedSourceUrls) ? p.selectedSourceUrls : []),
@@ -162,10 +165,14 @@ export function readField6HomeMeta(): Field6HomeMeta {
     const data = JSON.parse(raw) as Field6PersistedV1
     if (data?.v !== 1) return { flowCompleted: false, hasSavedSession: false }
 
+    const hasFactsStructured =
+      data.facts != null &&
+      (data.facts.i?.length ?? 0) + (data.facts.ii?.length ?? 0) + (data.facts.iii?.length ?? 0) > 0
     const hasSavedSession =
       (data.currentStep != null && data.currentStep > 1) ||
       Boolean(data.metadata) ||
       Boolean(data.factsText) ||
+      hasFactsStructured ||
       Boolean(data.synthesisText)
 
     return {
