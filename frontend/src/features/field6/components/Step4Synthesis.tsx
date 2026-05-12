@@ -1,4 +1,4 @@
-import { type Dispatch, type ReactNode, useEffect, useState } from 'react'
+import { type Dispatch, useEffect, useState } from 'react'
 import { flushSync } from 'react-dom'
 import { StepHeader } from '../../../shared/ui/StepHeader'
 import { StepContainer } from '../../../shared/ui/StepContainer'
@@ -43,33 +43,6 @@ function parseSynthesisText(text: string): SynthesisParts {
 
 function buildSynthesisText(parts: SynthesisParts): string {
   return `6. Συναφείς Πρακτικές\ni) ${parts.i}\nii) ${parts.ii}\niii) ${parts.iii}`
-}
-
-const URL_IN_TEXT_RE = /(https?:\/\/[^\s)]+)/g
-
-function renderTextWithLinks(text: string): ReactNode {
-  URL_IN_TEXT_RE.lastIndex = 0
-  const nodes: ReactNode[] = []
-  let last = 0
-  let m: RegExpExecArray | null
-  let k = 0
-  while ((m = URL_IN_TEXT_RE.exec(text)) !== null) {
-    const url = m[1]
-    const start = m.index
-    if (start > last) {
-      nodes.push(text.slice(last, start))
-    }
-    nodes.push(
-      <a key={`syn-url-${k++}`} href={url} target="_blank" rel="noopener noreferrer">
-        {url}
-      </a>,
-    )
-    last = start + url.length
-  }
-  if (last < text.length) {
-    nodes.push(text.slice(last))
-  }
-  return nodes.length > 0 ? nodes : text
 }
 
 /** Μπλοκάρει διπλό κλικ πριν προλάβει το reducer να ενημερώσει synthesisStatus → loading. */
@@ -192,9 +165,6 @@ export function Step4Synthesis({ state, dispatch }: Props) {
                     rows={5}
                     aria-label="Συναφείς πρακτικές σε άλλη/ες χώρα/ες της Ε.Ε. ή του ΟΟΣΑ"
                   />
-                  <div className="synthesis-preview" style={{ whiteSpace: 'pre-wrap' }}>
-                    {renderTextWithLinks(parts.i)}
-                  </div>
                 </td>
               </tr>
               <tr>
@@ -206,9 +176,6 @@ export function Step4Synthesis({ state, dispatch }: Props) {
                     rows={5}
                     aria-label="Συναφείς πρακτικές σε όργανα της Ε.Ε."
                   />
-                  <div className="synthesis-preview" style={{ whiteSpace: 'pre-wrap' }}>
-                    {renderTextWithLinks(parts.ii)}
-                  </div>
                 </td>
               </tr>
               <tr>
@@ -220,9 +187,6 @@ export function Step4Synthesis({ state, dispatch }: Props) {
                     rows={5}
                     aria-label="Συναφείς πρακτικές σε διεθνείς οργανισμούς"
                   />
-                  <div className="synthesis-preview" style={{ whiteSpace: 'pre-wrap' }}>
-                    {renderTextWithLinks(parts.iii)}
-                  </div>
                 </td>
               </tr>
             </tbody>
