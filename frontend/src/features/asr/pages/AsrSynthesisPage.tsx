@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { type ReactNode, useEffect, useState } from 'react'
 import { ConsultationReportPreviewTable } from '../../field23/components/ConsultationReportPreviewTable'
 import type { ConsultationReportArticleSection } from '../../field23/types'
+import { initialField23ReportDraft, type Field23ReportDraft, type Field23ReportPreviewCells } from '../../field23/state/reducer'
 import type { AnalyzeField4Response } from '../../field4/types'
 import type { AnalyzeField29Response } from '../../field29/types'
 import type { AnalyzeField30Response } from '../../field30/types'
@@ -167,6 +168,18 @@ interface Field23Data {
   previewText: string
   articles_section: ConsultationReportArticleSection[]
   participantsTotal: number
+  previewCells: Field23ReportPreviewCells
+}
+
+function reviveField23PreviewCells(raw: unknown): Field23ReportPreviewCells {
+  const base: Field23ReportPreviewCells = { participants: null, adopted: null, not_adopted: null }
+  if (!raw || typeof raw !== 'object') return base
+  const o = raw as Record<string, unknown>
+  return {
+    participants: typeof o.participants === 'string' ? o.participants : null,
+    adopted: typeof o.adopted === 'string' ? o.adopted : null,
+    not_adopted: typeof o.not_adopted === 'string' ? o.not_adopted : null,
+  }
 }
 
 function reviveField23Articles(raw: unknown): ConsultationReportArticleSection[] {
@@ -196,6 +209,7 @@ function readField23(): Field23Data | null {
           final_preview_text?: unknown
           articles_section?: unknown
           totals?: { participants_total?: unknown }
+          previewCells?: unknown
         } | null
       }
     | null
@@ -211,7 +225,8 @@ function readField23(): Field23Data | null {
       ? draft.totals.participants_total
       : 0
   if (!previewText.trim() && articles_section.length === 0) return null
-  return { previewText, articles_section, participantsTotal }
+  const previewCells = reviveField23PreviewCells(draft?.previewCells)
+  return { previewText, articles_section, participantsTotal, previewCells }
 }
 
 interface Field29Data {
@@ -372,12 +387,19 @@ function Field9Section({ data }: { data: Field9Data }) {
 
 function Field23Section({ data }: { data: Field23Data }) {
   if (data.articles_section.length > 0) {
+    const draft: Field23ReportDraft = {
+      ...initialField23ReportDraft,
+      totals: {
+        ...initialField23ReportDraft.totals,
+        participants_total: data.participantsTotal,
+      },
+      articles_section: data.articles_section,
+      final_preview_text: data.previewText,
+      previewCells: data.previewCells,
+    }
     return (
       <div className="asr-section__body">
-        <ConsultationReportPreviewTable
-          participantsTotal={data.participantsTotal}
-          articles={data.articles_section}
-        />
+        <ConsultationReportPreviewTable draft={draft} readOnly />
       </div>
     )
   }
@@ -414,6 +436,117 @@ function Field30Section({ data }: { data: Field30Data }) {
       <Field30ResultTable rows={result.field_30_rows} fallbackText={result.field_30_answer} />
     </div>
   )
+}
+
+/** Ίδια λογική ομαδοποίησης με την αρχική (ενότητες Α–Η και πεδία). */
+type FieldSlot = 'field4' | 'field6' | 'field7' | 'field9' | 'field23' | 'field29' | 'field30'
+
+type AsrChapterField = { slot: FieldSlot; label: string; description: string }
+
+const ASR_CHAPTERS: Array<{ code: string; title: string; fields: AsrChapterField[] }> = [
+  {
+    code: 'A',
+    title: 'ΑΙΤΙΟΛΟΓΙΚΗ ΕΚΘΕΣΗ',
+    fields: [
+      { slot: 'field4', label: 'Πεδίο 4', description: 'Νομοθετικές αναφορές.' },
+      { slot: 'field6', label: 'Πεδίο 6', description: 'Συναφείς Πρακτικές.' },
+      {
+        slot: 'field7',
+        label: 'Πεδίο 7',
+        description: 'Αντιστοίχιση του νόμου με τους 17 Στόχους Βιώσιμης Ανάπτυξης (SDGs) του ΟΗΕ.',
+      },
+      { slot: 'field9', label: 'Πεδίο 9', description: 'Ειδικότεροι στόχοι ανάλογα με τον τομέα νομοθέτησης.' },
+    ],
+  },
+  {
+    code: 'B',
+    title: 'ΕΚΘΕΣΗ ΤΟΥ ΑΡΘΡΟΥ 75 ΠΑΡ. 1 & 2 ΤΟΥ ΣΥΝΤΑΓΜΑΤΟΣ',
+    fields: [],
+  },
+  {
+    code: 'Γ',
+    title: 'ΕΚΘΕΣΗ ΤΟΥ ΑΡΘΡΟΥ 75 ΠΑΡ. 3 ΤΟΥ ΣΥΝΤΑΓΜΑΤΟΣ',
+    fields: [],
+  },
+  {
+    code: 'Δ',
+    title: 'ΕΚΘΕΣΗ ΓΕΝΙΚΩΝ ΣΥΝΕΠΕΙΩΝ',
+    fields: [],
+  },
+  {
+    code: 'Ε',
+    title: 'ΕΚΘΕΣΗ ΔΙΑΒΟΥΛΕΥΣΗΣ',
+    fields: [
+      {
+        slot: 'field23',
+        label: 'Πεδίο 23',
+        description: 'Σχόλια στο πλαίσιο της διαβούλευσης μέσω της ηλεκτρονικής πλατφόρμας www.opengov.gr.',
+      },
+    ],
+  },
+  {
+    code: 'ΣΤ',
+    title: 'ΕΚΘΕΣΗ ΝΟΜΙΜΟΤΗΤΑΣ',
+    fields: [],
+  },
+  {
+    code: 'Ζ',
+    title: 'ΠΙΝΑΚΑΣ ΤΡΟΠΟΠΟΙΟΥΜΕΝΩΝ Ή ΚΑΤΑΡΓΟΥΜΕΝΩΝ ΔΙΑΤΑΞΕΩΝ',
+    fields: [
+      {
+        slot: 'field29',
+        label: 'Πεδίο 29',
+        description: 'Τροποποίηση - Αντικατάσταση - Συπλήρωση Διατάξεων',
+      },
+      { slot: 'field30', label: 'Πεδίο 30', description: 'Κατάργηση Διατάξεων' },
+    ],
+  },
+  {
+    code: 'Η',
+    title: 'ΕΚΘΕΣΗ ΕΦΑΡΜΟΓΗΣ ΤΗΣ ΡΥΘΜΙΣΗΣ',
+    fields: [],
+  },
+]
+
+function asrFieldHeadingText(description: string): string {
+  return description.replace(/\.\s*$/, '')
+}
+
+function FieldSlotContent({
+  slot,
+  field4,
+  field6,
+  field7,
+  field9,
+  field23,
+  field29,
+  field30,
+}: {
+  slot: FieldSlot
+  field4: Field4Data | null
+  field6: Field6Data | null
+  field7: Field7Data | null
+  field9: Field9Data | null
+  field23: Field23Data | null
+  field29: Field29Data | null
+  field30: Field30Data | null
+}): ReactNode {
+  switch (slot) {
+    case 'field4':
+      return field4 ? <Field4Section data={field4} /> : <EmptySection />
+    case 'field6':
+      return field6 ? <Field6Section data={field6} /> : <EmptySection />
+    case 'field7':
+      return field7 ? <Field7Section data={field7} /> : <EmptySection />
+    case 'field9':
+      return field9 ? <Field9Section data={field9} /> : <EmptySection />
+    case 'field23':
+      return field23 ? <Field23Section data={field23} /> : <EmptySection />
+    case 'field29':
+      return field29 ? <Field29Section data={field29} /> : <EmptySection />
+    case 'field30':
+      return field30 ? <Field30Section data={field30} /> : <EmptySection />
+  }
 }
 
 export function AsrSynthesisPage() {
@@ -467,48 +600,6 @@ export function AsrSynthesisPage() {
     }
   }, [])
 
-  const sections: Array<{
-    code: string
-    title: string
-    content: ReactNode
-  }> = [
-    {
-      code: 'Πεδίο 4',
-      title: 'Νομοθετικές αναφορές',
-      content: field4 ? <Field4Section data={field4} /> : <EmptySection />,
-    },
-    {
-      code: 'Πεδίο 6',
-      title: 'Συναφείς Πρακτικές',
-      content: field6 ? <Field6Section data={field6} /> : <EmptySection />,
-    },
-    {
-      code: 'Πεδίο 7',
-      title: 'Συμβατότητα με τους Στόχους Βιώσιμης Ανάπτυξης (SDGs) του ΟΗΕ',
-      content: field7 ? <Field7Section data={field7} /> : <EmptySection />,
-    },
-    {
-      code: 'Πεδίο 9',
-      title: 'Ειδικότεροι στόχοι ανάλογα με τον τομέα νομοθέτησης',
-      content: field9 ? <Field9Section data={field9} /> : <EmptySection />,
-    },
-    {
-      code: 'Πεδίο 23',
-      title: 'Σχόλια στο πλαίσιο της διαβούλευσης (www.opengov.gr)',
-      content: field23 ? <Field23Section data={field23} /> : <EmptySection />,
-    },
-    {
-      code: 'Πεδίο 29',
-      title: 'Τροποποίηση - Αντικατάσταση - Συμπλήρωση Διατάξεων',
-      content: field29 ? <Field29Section data={field29} /> : <EmptySection />,
-    },
-    {
-      code: 'Πεδίο 30',
-      title: 'Κατάργηση Διατάξεων',
-      content: field30 ? <Field30Section data={field30} /> : <EmptySection />,
-    },
-  ]
-
   return (
     <section className="asr-synthesis-page page-shell">
       <header className="page-hero">
@@ -519,14 +610,45 @@ export function AsrSynthesisPage() {
         </p>
       </header>
 
-      <div className="asr-sections">
-        {sections.map((section) => (
-          <article key={section.code} className="asr-section">
-            <header className="asr-section__header">
-              <p className="asr-section__code">{section.code}</p>
-              <h2 className="asr-section__title">{section.title}</h2>
+      <div className="asr-chapters" aria-label="Ενότητες σύνθεσης ΑΣΡ">
+        {ASR_CHAPTERS.map((chapter) => (
+          <article key={chapter.code} className="asr-chapter">
+            <header className="asr-chapter__header">
+              <h2 className="asr-chapter__title">
+                <span className="asr-chapter__code">{chapter.code}.</span>
+                <span className="asr-chapter__title-text">{chapter.title}</span>
+              </h2>
             </header>
-            {section.content}
+            {chapter.fields.length === 0 ? (
+              <p className="asr-chapter__empty">
+                Δεν υπάρχει ολοκληρωμένο περιεχόμενο για αυτή την ενότητα.
+              </p>
+            ) : (
+              <div className="asr-chapter__fields">
+                {chapter.fields.map((f) => (
+                  <section key={f.slot} className="asr-field-block" aria-label={f.label}>
+                    <header className="asr-field-block__header">
+                      <h3 className="asr-field-block__title">
+                        <span className="asr-field-block__code">{f.label}.</span>
+                        <span className="asr-field-block__title-text">
+                          {asrFieldHeadingText(f.description)}
+                        </span>
+                      </h3>
+                    </header>
+                    <FieldSlotContent
+                      slot={f.slot}
+                      field4={field4}
+                      field6={field6}
+                      field7={field7}
+                      field9={field9}
+                      field23={field23}
+                      field29={field29}
+                      field30={field30}
+                    />
+                  </section>
+                ))}
+              </div>
+            )}
           </article>
         ))}
       </div>
