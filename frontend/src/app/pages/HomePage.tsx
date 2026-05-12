@@ -1,12 +1,7 @@
 import { Link } from 'react-router-dom'
-import { type ReactNode, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useLawFiles } from '../providers/LawFilesProvider'
 import { FileUploader } from '../../shared/ui/FileUploader'
-import type { AnalyzeField4Response } from '../../features/field4/types'
-import type { AnalyzeField29Response } from '../../features/field29/types'
-import type { AnalyzeField30Response } from '../../features/field30/types'
-import { Field29ResultTable } from '../../features/field29/components/Field29ResultTable'
-import { Field30ResultTable } from '../../features/field30/components/Field30ResultTable'
 import {
   clearField23Persisted,
   field23PersistEventName,
@@ -42,44 +37,6 @@ import {
   field30PersistEventName,
   readField30HomeMeta,
 } from '../../features/field30/state/persist'
-
-function Field4WorkflowResult({ result }: { result: AnalyzeField4Response }) {
-  return (
-    <section className="workflow-card-result" aria-label="Αποτέλεσμα Πεδίου 4">
-      <div className="field4-result__meta">
-        <span>{result.filename}</span>
-        <span>{result.articles_count} άρθρα</span>
-      </div>
-      <pre className="field4-result__text">{result.field_4_answer}</pre>
-    </section>
-  )
-}
-
-function Field29WorkflowResult({ result }: { result: AnalyzeField29Response }) {
-  return (
-    <section className="workflow-card-result" aria-label="Αποτέλεσμα Πεδίου 29">
-      <div className="field29-result__meta">
-        <span>{result.filename}</span>
-        <span>{result.articles_count} άρθρα</span>
-        <span>{result.field_29_articles_count} σχετικά με το Πεδίο 29</span>
-      </div>
-      <Field29ResultTable value={result.field_29_answer} rows={result.field_29_rows} />
-    </section>
-  )
-}
-
-function Field30WorkflowResult({ result }: { result: AnalyzeField30Response }) {
-  return (
-    <section className="workflow-card-result" aria-label="Αποτέλεσμα Πεδίου 30">
-      <div className="field29-result__meta">
-        <span>{result.filename}</span>
-        <span>{result.articles_count} άρθρα</span>
-        <span>{result.field_30_articles_count} σχετικά με το Πεδίο 30</span>
-      </div>
-      <Field30ResultTable rows={result.field_30_rows} fallbackText={result.field_30_answer} />
-    </section>
-  )
-}
 
 export function HomePage() {
   const { initialLawFile, finalLawFile, setInitialLawFile, setFinalLawFile } = useLawFiles()
@@ -163,7 +120,6 @@ export function HomePage() {
     card: { flowCompleted: boolean; hasSavedSession: boolean },
     clearPersisted: () => void,
     modifierClass: string,
-    resultContent?: ReactNode,
   ) {
     const { to, title, description, requiresFinalPdf } = workflow
     const hasFinalPdf = Boolean(finalLawFile)
@@ -192,7 +148,6 @@ export function HomePage() {
                 Επαναφορά ροής
               </button>
             </div>
-            {resultContent && <div className="workflow-card__result">{resultContent}</div>}
           </>
         ) : (
           <Link
@@ -230,7 +185,6 @@ export function HomePage() {
         field4Card,
         clearField4Persisted,
         'workflow-card--field4',
-        field4Card.result ? <Field4WorkflowResult result={field4Card.result} /> : undefined,
       )
     }
 
@@ -395,7 +349,6 @@ export function HomePage() {
         field29Card,
         clearField29Persisted,
         'workflow-card--field29',
-        field29Card.result ? <Field29WorkflowResult result={field29Card.result} /> : undefined,
       )
     }
 
@@ -405,7 +358,6 @@ export function HomePage() {
         field30Card,
         clearField30Persisted,
         'workflow-card--field30',
-        field30Card.result ? <Field30WorkflowResult result={field30Card.result} /> : undefined,
       )
     }
 
