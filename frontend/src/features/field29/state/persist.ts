@@ -61,7 +61,7 @@ export function persistedToState(p: Field29PersistedV1): Field29State {
     analyzeStatus,
     result,
     analyzeError: p.analyzeError ?? null,
-    flowCompleted: Boolean(p.flowCompleted || result),
+    flowCompleted: Boolean(p.flowCompleted),
   }
 }
 
@@ -120,7 +120,7 @@ export function readField29HomeMeta(): Field29HomeMeta {
       (data.analyzeStatus != null && data.analyzeStatus !== 'idle')
 
     return {
-      flowCompleted: Boolean(data.flowCompleted || result),
+      flowCompleted: Boolean(data.flowCompleted),
       hasSavedSession,
       result,
     }
