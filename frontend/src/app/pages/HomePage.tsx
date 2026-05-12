@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useEffect, useState } from 'react'
+import type { ReactNode } from 'react'
 import { useLawFiles } from '../providers/LawFilesProvider'
 import { FileUploader } from '../../shared/ui/FileUploader'
 import {
@@ -37,6 +38,11 @@ import {
   field30PersistEventName,
   readField30HomeMeta,
 } from '../../features/field30/state/persist'
+import type { AnalyzeField4Response } from '../../features/field4/types'
+import type { AnalyzeField29Response } from '../../features/field29/types'
+import type { AnalyzeField30Response } from '../../features/field30/types'
+import { Field29ResultTable } from '../../features/field29/components/Field29ResultTable'
+import { Field30ResultTable } from '../../features/field30/components/Field30ResultTable'
 
 function IconPlay({ className }: { className?: string }) {
   return (
