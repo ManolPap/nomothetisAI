@@ -2,7 +2,9 @@ export interface Field30Row {
   article: string
   item_label: string
   evaluated_provision: string
+  repeal_reference?: string
   repealed_provision: string
+  warning?: string
 }
 
 export interface AnalyzeField30Response {

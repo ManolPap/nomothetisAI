@@ -2,8 +2,17 @@ import re
 import unicodedata
 from typing import Any
 
+from app.features.field_30.services.corpus_service import (
+    extract_repeal_references,
+    resolve_repeal_reference,
+)
+
 EMPTY_FIELD_30_ANSWER = (
     "Δεν εντοπίστηκαν διατάξεις για το Πεδίο 30 με βάση τους τίτλους των άρθρων."
+)
+UNRESOLVED_REFERENCE_MESSAGE = (
+    "Δεν εντοπίστηκε deterministic mapping για την καταργούμενη διάταξη στο corpus "
+    "του Πεδίου 30."
 )
 
 
@@ -80,20 +89,37 @@ def analyze_bill_field_30_rows(articles: list[dict[str, Any]]) -> list[dict[str,
 
     for article in select_field_30_articles(articles):
         article_number = str(article["article"])
-        title = str(article.get("title") or "").strip()
         text = str(article.get("text") or "")
-        intro = extract_repeals_intro(text)
-        evaluated = clean_display_text(f"Άρθρο {article_number}\n{title}\n{intro}")
 
         for letter, content in split_repealed_items(text):
-            rows.append(
-                {
+            evaluated = clean_display_text(content)
+            references = extract_repeal_references(content)
+
+            if not references:
+                rows.append(
+                    {
+                        "article": article_number,
+                        "item_label": letter,
+                        "evaluated_provision": evaluated,
+                        "repeal_reference": content,
+                        "repealed_provision": UNRESOLVED_REFERENCE_MESSAGE,
+                        "warning": UNRESOLVED_REFERENCE_MESSAGE,
+                    }
+                )
+                continue
+
+            for reference in references:
+                resolved = resolve_repeal_reference(reference)
+                row = {
                     "article": article_number,
                     "item_label": letter,
                     "evaluated_provision": evaluated,
-                    "repealed_provision": content,
+                    "repeal_reference": reference.source_text,
+                    "repealed_provision": resolved.text,
                 }
-            )
+                if resolved.warning:
+                    row["warning"] = resolved.warning
+                rows.append(row)
 
     return rows
 
@@ -108,11 +134,15 @@ def render_field_30_markdown_table(rows: list[dict[str, str]]) -> str:
     ]
 
     for row in rows:
+        repealed_provision = row["repealed_provision"]
+        if row.get("warning"):
+            repealed_provision = f"Προειδοποίηση: {row['warning']}\n\n{repealed_provision}"
+
         lines.append(
             "| "
             f"{render_markdown_table_cell(row['evaluated_provision'])}"
             " | "
-            f"{render_markdown_table_cell(row['repealed_provision'])}"
+            f"{render_markdown_table_cell(repealed_provision)}"
             " |"
         )
 

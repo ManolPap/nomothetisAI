@@ -22,6 +22,7 @@ export type Field29Action =
   | { type: 'ANALYZE_LOADING' }
   | { type: 'ANALYZE_SUCCESS'; payload: AnalyzeField29Response }
   | { type: 'ANALYZE_ERROR'; error: string }
+  | { type: 'RERUN_ANALYSIS' }
   | { type: 'MARK_FLOW_COMPLETED' }
   | { type: 'RESET_FIELD29_WORKFLOW' }
   | { type: 'RESET' }
@@ -77,10 +78,17 @@ export function field29Reducer(state: Field29State, action: Field29Action): Fiel
         analyzeStatus: 'ready',
         result: action.payload,
         analyzeError: null,
-        flowCompleted: true,
       }
     case 'ANALYZE_ERROR':
       return { ...state, analyzeStatus: 'error', analyzeError: action.error }
+    case 'RERUN_ANALYSIS':
+      return {
+        ...state,
+        analyzeStatus: 'idle',
+        result: null,
+        analyzeError: null,
+        flowCompleted: false,
+      }
     case 'MARK_FLOW_COMPLETED':
       return { ...state, flowCompleted: true }
     case 'RESET_FIELD29_WORKFLOW':

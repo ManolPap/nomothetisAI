@@ -44,13 +44,20 @@ export function Step1Analyze({ state, dispatch }: Props) {
 
   const isLoading = state.analyzeStatus === 'loading'
   const displayedFileName = state.file?.name ?? state.fileMeta?.name
+  const canComplete = state.analyzeStatus === 'ready' && Boolean(state.result)
 
   return (
     <StepContainer
-      onNext={() => state.file && runAnalysis(state.file)}
-      nextLabel={state.result ? 'Επανάλυση' : 'Ανάλυση'}
-      nextDisabled={!state.file || isLoading}
+      onNext={
+        !state.flowCompleted && canComplete
+          ? () => dispatch({ type: 'MARK_FLOW_COMPLETED' })
+          : undefined
+      }
+      nextLabel="Ολοκληρώθηκε"
+      nextClassName="btn-field23-complete"
+      nextDisabled={false}
       isLoading={isLoading}
+      showContinueHome={state.flowCompleted}
     >
       <StepHeader
         title="Ανάλυση Πεδίου 29"
@@ -83,12 +90,32 @@ export function Step1Analyze({ state, dispatch }: Props) {
             <span>{state.result.articles_count} άρθρα</span>
             <span>{state.result.field_29_articles_count} σχετικά με το Πεδίο 29</span>
           </div>
+          {state.analyzeStatus === 'ready' && state.file && (
+            <p className="field30-result-actions">
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => dispatch({ type: 'RERUN_ANALYSIS' })}
+                disabled={isLoading}
+              >
+                Επανάλυση
+              </button>
+            </p>
+          )}
           <Field29ResultTable
             value={state.result.field_29_answer}
             rows={state.result.field_29_rows}
           />
         </section>
       )}
+
+      <div className="field6-step4-complete">
+        {state.flowCompleted && (
+          <p className="field6-step4-complete__done" role="status">
+            Η ροή σημειώθηκε ως ολοκληρωμένη στην αρχική.
+          </p>
+        )}
+      </div>
     </StepContainer>
   )
 }
