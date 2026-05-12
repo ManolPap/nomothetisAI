@@ -331,24 +331,16 @@ def step5_extract_facts(
 # Βήμα 6: Σύνθεση Πεδίου 6
 # -------------------------------------------------------
 
-_SYNTHESIS_FACT_TAIL_PATTERNS: tuple[tuple[str, int], ...] = (
-    (r"\s*\(FACT_iii\)\s*$", re.IGNORECASE),
-    (r"\s*\(FACT_ii\)\s*$", re.IGNORECASE),
-    (r"\s*\(FACT_i\)\s*$", re.IGNORECASE),
-    (r"\s*FACT_iii\s*$", re.IGNORECASE),
-    (r"\s*FACT_ii\s*$", re.IGNORECASE),
-    (r"\s*FACT_i\s*$", re.IGNORECASE),
-)
-
 
 def _strip_synthesis_fact_markers_from_output(text: str) -> str:
     """Αφαιρεί ετικέτες FACT_* που το μοντέλο μερικές φορές αντιγράφει από τα facts."""
-    text = re.sub(r'\s*\(FACT_iiGNORECASE)
-    text = re.sub(r'\s*\(FACT_i\)\s*', ' ', text, flags=re.IGNORECASE)
-    text = re.sub(r'\s*FACT_iii\s*', ' ', text, flags=re.IGNORECASE)
-    text = re.sub(r'\s*FACT_ii\s*', ' ', text, flags=re.IGNORECASE)
-    text = re.sub(r'\s*FACT_i\s*', ' ', text, flags=re.IGNORECASE)
-    text = re.sub(r'  +', ' ', text)
+    text = re.sub(r"\s*\(FACT_iii\)\s*", " ", text, flags=re.IGNORECASE)
+    text = re.sub(r"\s*\(FACT_ii\)\s*", " ", text, flags=re.IGNORECASE)
+    text = re.sub(r"\s*\(FACT_i\)\s*", " ", text, flags=re.IGNORECASE)
+    text = re.sub(r"\s*FACT_iii\s*", " ", text, flags=re.IGNORECASE)
+    text = re.sub(r"\s*FACT_ii\s*", " ", text, flags=re.IGNORECASE)
+    text = re.sub(r"\s*FACT_i\s*", " ", text, flags=re.IGNORECASE)
+    text = re.sub(r"  +", " ", text)
     return text.strip()
 
 
