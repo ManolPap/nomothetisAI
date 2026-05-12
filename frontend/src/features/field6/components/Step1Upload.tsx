@@ -81,7 +81,7 @@ export function Step1Upload({ state, dispatch }: Props) {
               ['topic', 'Θέμα'],
               ['ministry', 'Υπουργείο'],
               ['sector', 'Τομέας'],
-              ['measures', 'Μέτρα'],
+              ['measures', 'Κύριες Ρυθμίσεις'],
               ['directive', 'Οδηγία ΕΕ'],
             ] as [keyof LawMetadata, string][]).map(([key, label]) => (
               <label key={key} className="form-field">

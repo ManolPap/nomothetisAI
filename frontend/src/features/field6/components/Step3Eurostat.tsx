@@ -39,7 +39,7 @@ export function Step3Eurostat({ state, dispatch }: Props) {
       nextDisabled={!canContinue}
       isLoading={state.eurostatStatus === 'loading'}
     >
-      <StepHeader title="Επιλογή Eurostat Δεδομένων" stepNumber={3} totalSteps={4} />
+      <StepHeader title="Επιλογή Δεικτών" stepNumber={3} totalSteps={4} />
 
       {state.eurostatStatus === 'loading' && <LoadingPanel message="Λήψη Eurostat δεδομένων…" />}
       {state.eurostatError && <ErrorBanner message={state.eurostatError} onRetry={loadEurostat} />}

@@ -30,11 +30,7 @@ export function Field6Page() {
   return (
     <ErrorBoundary fallbackTitle="Σφάλμα στο Πεδίο 6">
       <div className="feature-page page-shell">
-        <header className="page-hero">
-          <p className="page-hero__eyebrow">Field 6 Workflow</p>
-          <p className="page-hero__subtitle">Ανάλυση κειμένου νόμου με διαδοχικά βήματα επιβεβαίωσης.</p>
-        </header>
-        <h1 className="feature-page__title">Πεδίο 6 — Ανάλυση Νόμου</h1>
+        <h1 className="feature-page__title">Πεδίο 6 - Συναφείς Πρακτικές</h1>
         {state.currentStep === 1 && <Step1Upload state={state} dispatch={dispatch} />}
         {state.currentStep === 2 && <Step2WebFacts state={state} dispatch={dispatch} />}
         {state.currentStep === 3 && <Step3Eurostat state={state} dispatch={dispatch} />}

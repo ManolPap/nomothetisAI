@@ -81,7 +81,7 @@ export function Step1Sector({ state, dispatch }: Props) {
             />
           </label>
           <label className="form-field">
-            <span className="form-field__label">Έτος</span>
+            <span className="form-field__label">Έτος αναφοράς</span>
             <input
               className="form-field__input"
               type="number"
@@ -97,7 +97,7 @@ export function Step1Sector({ state, dispatch }: Props) {
             )}
           </label>
           <label className="form-field">
-            <span className="form-field__label">Τίτλος Νόμου</span>
+            <span className="form-field__label">Θεματολογία νόμου</span>
             <textarea
               className="form-field__input"
               value={state.lawTitle}

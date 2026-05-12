@@ -141,12 +141,23 @@ a {
 
 .step-actions {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
+  align-items: center;
   gap: 0.7rem;
+  flex-wrap: wrap;
   border-top: 1px solid var(--border);
   padding: 0.85rem 1.25rem;
   background: var(--surface-soft);
 }
+
+.step-actions__leading,
+.step-actions__trailing {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  min-height: 2.25rem;
+}
+
 
 .step-header {
   display: flex;

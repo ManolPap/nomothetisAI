@@ -129,6 +129,7 @@ export function Step4Synthesis({ state, dispatch }: Props) {
       nextLabel="Σύνθεση"
       nextDisabled={isLoading}
       isLoading={isLoading}
+      showContinueHome
     >
       <StepHeader
         title="Σύνθεση Πεδίου 6"
@@ -136,17 +137,6 @@ export function Step4Synthesis({ state, dispatch }: Props) {
         totalSteps={4}
         description="Παράγετε και επεξεργαστείτε το τελικό κείμενο."
       />
-
-      {!hasRun && (
-        <button
-          type="button"
-          className="btn btn-primary"
-          onClick={runSynthesis}
-          disabled={isLoading}
-        >
-          {isLoading ? 'Σύνθεση…' : 'Εκτέλεση Σύνθεσης'}
-        </button>
-      )}
 
       {state.synthesisError && (
         <ErrorBanner message={state.synthesisError} onRetry={runSynthesis} />
