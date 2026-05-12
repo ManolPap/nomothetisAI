@@ -343,9 +343,9 @@ _SYNTHESIS_FACT_TAIL_PATTERNS: tuple[tuple[str, int], ...] = (
 
 def _strip_synthesis_fact_markers_from_output(text: str) -> str:
     """Αφαιρεί ετικέτες FACT_* που το μοντέλο μερικές φορές αντιγράφει από τα facts."""
-    text = re.sub(r'\s*\(FACT_iii\)\s*', ' ', text, flags=re.IGNORECASE)
-    text = re.sub(r'\s*\(FACT_ii\)\s*', ' ', text, flags=re.IGNORECASE)
-   i\s*', ' ', text, flags=re.IGNORECASE)
+    text = re.sub(r'\s*\(FACT_iiGNORECASE)
+    text = re.sub(r'\s*\(FACT_i\)\s*', ' ', text, flags=re.IGNORECASE)
+    text = re.sub(r'\s*FACT_iii\s*', ' ', text, flags=re.IGNORECASE)
     text = re.sub(r'\s*FACT_ii\s*', ' ', text, flags=re.IGNORECASE)
     text = re.sub(r'\s*FACT_i\s*', ' ', text, flags=re.IGNORECASE)
     text = re.sub(r'  +', ' ', text)
