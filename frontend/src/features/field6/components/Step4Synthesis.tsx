@@ -9,40 +9,16 @@ import {
   buildEurostatText,
   buildSelectedFactsTextFromStructured,
   buildSelectedSources,
+  buildSynthesisText,
   parseFactsText,
+  parseSynthesisText,
+  type Field6SynthesisParts,
 } from '../utils'
 import type { Field6Action, Field6State } from '../state/reducer'
 
 interface Props {
   state: Field6State
   dispatch: Dispatch<Field6Action>
-}
-
-interface SynthesisParts {
-  i: string
-  ii: string
-  iii: string
-}
-
-function stripLeadingHeader(part: string): string {
-  return part.replace(/^(?:Χώρες ΕΕ\/ΟΟΣΑ|Όργανα ΕΕ|Διεθνείς Οργανισμοί)[^\n]*\n+/, '').trimStart()
-}
-
-function parseSynthesisText(text: string): SynthesisParts {
-  const normalized = text.replace(/\r\n/g, '\n')
-  const iMatch = normalized.match(/i\)\s*([\s\S]*?)(?=\nii\)|$)/)
-  const iiMatch = normalized.match(/ii\)\s*([\s\S]*?)(?=\niii\)|$)/)
-  const iiiMatch = normalized.match(/iii\)\s*([\s\S]*?)$/)
-
-  return {
-    i: stripLeadingHeader(iMatch?.[1]?.trim() ?? ''),
-    ii: stripLeadingHeader(iiMatch?.[1]?.trim() ?? ''),
-    iii: stripLeadingHeader(iiiMatch?.[1]?.trim() ?? ''),
-  }
-}
-
-function buildSynthesisText(parts: SynthesisParts): string {
-  return `6. Συναφείς Πρακτικές\ni) ${parts.i}\nii) ${parts.ii}\niii) ${parts.iii}`
 }
 
 /** Μπλοκάρει διπλό κλικ πριν προλάβει το reducer να ενημερώσει synthesisStatus → loading. */
@@ -52,7 +28,7 @@ export function Step4Synthesis({ state, dispatch }: Props) {
   const [hasRun, setHasRun] = useState(state.synthesisStatus === 'ready')
   /** Συγχρονισμένο «busy» ώστε τα κουμπιά να κλειδώνουν πριν προλάβει paint χωρίς loading στο reducer. */
   const [synthesisPending, setSynthesisPending] = useState(false)
-  const [parts, setParts] = useState<SynthesisParts>(() => parseSynthesisText(state.synthesisText))
+  const [parts, setParts] = useState<Field6SynthesisParts>(() => parseSynthesisText(state.synthesisText))
 
   useEffect(() => {
     setParts(parseSynthesisText(state.synthesisText))
@@ -114,7 +90,7 @@ export function Step4Synthesis({ state, dispatch }: Props) {
 
   const isLoading = state.synthesisStatus === 'loading' || synthesisPending
 
-  function updatePart(partKey: keyof SynthesisParts, value: string) {
+  function updatePart(partKey: keyof Field6SynthesisParts, value: string) {
     setParts((prev) => {
       const next = { ...prev, [partKey]: value }
       dispatch({ type: 'SET_SYNTHESIS_TEXT', text: buildSynthesisText(next) })

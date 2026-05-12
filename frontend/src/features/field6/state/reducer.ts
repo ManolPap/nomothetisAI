@@ -8,6 +8,7 @@ import type {
   WebSearchResponse,
   WebSource,
 } from '../types'
+import { countWords, normalizeField6SynthesisText } from '../utils'
 
 export type StepStatus = 'idle' | 'loading' | 'ready' | 'error'
 
@@ -211,14 +212,16 @@ export function field6Reducer(state: Field6State, action: Field6Action): Field6S
     }
     case 'SYNTHESIS_LOADING':
       return { ...state, synthesisStatus: 'loading', synthesisError: null }
-    case 'SYNTHESIS_SUCCESS':
+    case 'SYNTHESIS_SUCCESS': {
+      const synthesisText = normalizeField6SynthesisText(action.payload.field6_text)
       return {
         ...state,
         synthesisStatus: 'ready',
-        synthesisText: action.payload.field6_text,
-        wordCount: action.payload.word_count,
+        synthesisText,
+        wordCount: countWords(synthesisText),
         synthesisError: null,
       }
+    }
     case 'SYNTHESIS_ERROR':
       return { ...state, synthesisStatus: 'error', synthesisError: action.error }
     case 'SET_SYNTHESIS_TEXT':

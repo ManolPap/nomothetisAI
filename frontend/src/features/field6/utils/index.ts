@@ -105,6 +105,56 @@ export function countWords(text: string): number {
   return text.trim() === '' ? 0 : text.trim().split(/\s+/).length
 }
 
+/** Τμήματα i / ii / iii από το συνολικό κείμενο σύνθεσης Πεδίου 6. */
+export interface Field6SynthesisParts {
+  i: string
+  ii: string
+  iii: string
+}
+
+function stripLeadingSynthesisHeader(part: string): string {
+  return part.replace(/^(?:Χώρες ΕΕ\/ΟΟΣΑ|Όργανα ΕΕ|Διεθνείς Οργανισμοί)[^\n]*\n+/, '').trimStart()
+}
+
+/**
+ * Αφαιρεί ετικέτες όπως (FACT_i) / (FACT_ii) / (FACT_iii) που μερικές φορές
+ * αντιγράφει το μοντέλο από τη μορφή των facts.
+ */
+export function stripSynthesisFactMarkers(part: string): string {
+  let s = part.trimEnd()
+  for (const re of [/\s*\(FACT_iii\)\s*$/i, /\s*\(FACT_ii\)\s*$/i, /\s*\(FACT_i\)\s*$/i]) {
+    const next = s.replace(re, '')
+    if (next !== s) s = next.trimEnd()
+  }
+  for (const re of [/\s*FACT_iii\s*$/i, /\s*FACT_ii\s*$/i, /\s*FACT_i\s*$/i]) {
+    const next = s.replace(re, '')
+    if (next !== s) s = next.trimEnd()
+  }
+  return s
+}
+
+export function parseSynthesisText(text: string): Field6SynthesisParts {
+  const normalized = text.replace(/\r\n/g, '\n')
+  const iMatch = normalized.match(/i\)\s*([\s\S]*?)(?=\nii\)|$)/)
+  const iiMatch = normalized.match(/ii\)\s*([\s\S]*?)(?=\niii\)|$)/)
+  const iiiMatch = normalized.match(/iii\)\s*([\s\S]*?)$/)
+
+  return {
+    i: stripSynthesisFactMarkers(stripLeadingSynthesisHeader(iMatch?.[1]?.trim() ?? '')),
+    ii: stripSynthesisFactMarkers(stripLeadingSynthesisHeader(iiMatch?.[1]?.trim() ?? '')),
+    iii: stripSynthesisFactMarkers(stripLeadingSynthesisHeader(iiiMatch?.[1]?.trim() ?? '')),
+  }
+}
+
+export function buildSynthesisText(parts: Field6SynthesisParts): string {
+  return `6. Συναφείς Πρακτικές\ni) ${parts.i}\nii) ${parts.ii}\niii) ${parts.iii}`
+}
+
+/** Κανονικοποιεί αποθηκευμένο/LLM κείμενο σύνθεσης (αφαίρεση FACT_* tags, σταθερή δομή). */
+export function normalizeField6SynthesisText(raw: string): string {
+  return buildSynthesisText(parseSynthesisText(raw))
+}
+
 export function buildSelectedSources(sources: WebSource[], selectedUrls: Set<string>): WebSource[] {
   return sources.filter((s) => selectedUrls.has(s.url))
 }

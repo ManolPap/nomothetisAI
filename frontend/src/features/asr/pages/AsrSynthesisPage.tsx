@@ -11,6 +11,7 @@ import { Field30ResultTable } from '../../field30/components/Field30ResultTable'
 import { field4PersistEventName, readField4HomeMeta } from '../../field4/state/persist'
 import { field29PersistEventName, readField29HomeMeta } from '../../field29/state/persist'
 import { field30PersistEventName, readField30HomeMeta } from '../../field30/state/persist'
+import { parseSynthesisText } from '../../field6/utils'
 
 const FIELD6_STORAGE_KEY = 'nomothetis-field6-session-v1'
 const FIELD7_STORAGE_KEY = 'nomothetis-field7-session-v1'
@@ -42,12 +43,6 @@ const ALL_SDGS = [
   { id: 17, title: 'Συνεργασία για τους Στόχους', color: '#19486A' },
 ] as const
 
-interface SynthesisParts {
-  i: string
-  ii: string
-  iii: string
-}
-
 function readJson(key: string): unknown {
   if (typeof window === 'undefined') return null
   try {
@@ -59,10 +54,6 @@ function readJson(key: string): unknown {
   }
 }
 
-function stripLeadingHeader(part: string): string {
-  return part.replace(/^(?:Χώρες ΕΕ\/ΟΟΣΑ|Όργανα ΕΕ|Διεθνείς Οργανισμοί)[^\n]*\n+/, '').trimStart()
-}
-
 interface Field4Data {
   result: AnalyzeField4Response
 }
@@ -70,18 +61,6 @@ interface Field4Data {
 function readField4(): Field4Data | null {
   const result = readField4HomeMeta().result
   return result ? { result } : null
-}
-
-function parseSynthesisText(text: string): SynthesisParts {
-  const normalized = text.replace(/\r\n/g, '\n')
-  const iMatch = normalized.match(/i\)\s*([\s\S]*?)(?=\nii\)|$)/)
-  const iiMatch = normalized.match(/ii\)\s*([\s\S]*?)(?=\niii\)|$)/)
-  const iiiMatch = normalized.match(/iii\)\s*([\s\S]*?)$/)
-  return {
-    i: stripLeadingHeader(iMatch?.[1]?.trim() ?? ''),
-    ii: stripLeadingHeader(iiMatch?.[1]?.trim() ?? ''),
-    iii: stripLeadingHeader(iiiMatch?.[1]?.trim() ?? ''),
-  }
 }
 
 interface Field6Data {

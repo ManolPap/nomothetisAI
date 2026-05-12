@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildEurostatText, countWords, parseFactsText } from '../index'
+import { buildEurostatText, countWords, parseFactsText, parseSynthesisText, stripSynthesisFactMarkers } from '../index'
 
 describe('parseFactsText', () => {
   it('parses FACT_i style lines', () => {
@@ -18,6 +18,22 @@ describe('parseFactsText', () => {
   it('returns null for empty text', () => {
     expect(parseFactsText('')).toBeNull()
     expect(parseFactsText('   ')).toBeNull()
+  })
+})
+
+describe('stripSynthesisFactMarkers / parseSynthesisText', () => {
+  it('strips trailing (FACT_i) style tags', () => {
+    expect(stripSynthesisFactMarkers('Κείμενο τέλους (FACT_i)')).toBe('Κείμενο τέλους')
+    expect(stripSynthesisFactMarkers('x (FACT_ii)')).toBe('x')
+  })
+
+  it('parses synthesis and strips markers from parts', () => {
+    const raw =
+      '6. Συναφείς Πρακτικές\ni) πρώτο (FACT_i)\nii) δεύτερο (FACT_ii)\niii) τρίτο (FACT_iii)'
+    const parts = parseSynthesisText(raw)
+    expect(parts.i).toBe('πρώτο')
+    expect(parts.ii).toBe('δεύτερο')
+    expect(parts.iii).toBe('τρίτο')
   })
 })
 

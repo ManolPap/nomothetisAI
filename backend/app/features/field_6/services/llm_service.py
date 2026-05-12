@@ -331,6 +331,27 @@ def step5_extract_facts(
 # Βήμα 6: Σύνθεση Πεδίου 6
 # -------------------------------------------------------
 
+_SYNTHESIS_FACT_TAIL_PATTERNS: tuple[tuple[str, int], ...] = (
+    (r"\s*\(FACT_iii\)\s*$", re.IGNORECASE),
+    (r"\s*\(FACT_ii\)\s*$", re.IGNORECASE),
+    (r"\s*\(FACT_i\)\s*$", re.IGNORECASE),
+    (r"\s*FACT_iii\s*$", re.IGNORECASE),
+    (r"\s*FACT_ii\s*$", re.IGNORECASE),
+    (r"\s*FACT_i\s*$", re.IGNORECASE),
+)
+
+
+def _strip_synthesis_fact_markers_from_output(text: str) -> str:
+    """Αφαιρεί ετικέτες FACT_* που το μοντέλο μερικές φορές αντιγράφει από τα facts."""
+    out_lines: list[str] = []
+    for line in text.split("\n"):
+        s = line
+        for pat, flags in _SYNTHESIS_FACT_TAIL_PATTERNS:
+            s = re.sub(pat, "", s, flags=flags)
+        out_lines.append(s.rstrip())
+    return "\n".join(out_lines)
+
+
 def step6_synthesize_field6(
     metadata: dict,
     facts_text: str,
@@ -363,7 +384,7 @@ def step6_synthesize_field6(
         print(f"⚠️ Fallback σε Flash Lite για σύνθεση (σφάλμα: {e})")
         response = get_llm_fast().invoke(messages)
 
-    text = extract_llm_content(response)
+    text = _strip_synthesis_fact_markers_from_output(extract_llm_content(response))
     word_count = len(text.split())
 
     print(f"\nΚείμενο Πεδίου 6 ({word_count} λέξεις):")
