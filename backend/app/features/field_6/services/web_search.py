@@ -197,36 +197,40 @@ def step2_eurlex_nim(metadata: dict) -> str:
 # Βήμα 4: Web Search με Tavily
 # -------------------------------------------------------
 
+DLA_PIPER_URL = (
+    "https://knowledge.dlapiper.com/dlapiperknowledge/globalemploymentlatestdevelopments/"
+    "transparent-and-predictable-working-conditions-directive-deadline-for-implementation-approaches"
+)
+
+HARDCODED_SOURCES: list[str] = [DLA_PIPER_URL]
+
+
 def step4_web_search(queries: list[str]) -> list[dict]:
     """
-    Εκτελεί αναζήτηση με ελαστικό domain filtering.
-    3 αποτελέσματα ανά query · fallback χωρίς domain filter αν χρειαστεί.
+    Εκτελεί αναζήτηση με domain filtering (Tavily).
+    2 αποτελέσματα ανά query · σταθερές πηγές HARDCODED_SOURCES πρώτα.
+    Αν υπάρχουν ≥5 queries (legacy), Tavily μόνο για τις θέσεις 3–5· αλλιώς για όλες
+    (3 queries = πρώην 3–5).
     """
     print("\n" + "=" * 60)
     print("ΒΗΜΑ 4: Αναζήτηση διεθνών πρακτικών (Tavily)")
     print("=" * 60)
 
+    # Queries 1–2 (χώρες/γενική) καλύπτονται από HARDCODED_SOURCES όταν η λίστα έχει 5 στοιχεία.
+    tavily_queries = queries[2:] if len(queries) >= 5 else list(queries)
+
     all_results: list[dict] = []
 
-    for i, query in enumerate(queries, 1):
+    for i, query in enumerate(tavily_queries, 1):
         print(f"[{i}] Ψάχνω: {query}")
         try:
             response = get_tavily().search(
                 query=query,
-                max_results=3,
+                max_results=2,
                 search_depth="advanced",
                 include_domains=TRUSTED_DOMAINS,
             )
             results = response.get("results", [])
-
-            if not results:
-                print("  → 0 αποτελέσματα με domain filter, δοκιμάζω χωρίς...")
-                response = get_tavily().search(
-                    query=query,
-                    max_results=3,
-                    search_depth="advanced",
-                )
-                results = response.get("results", [])
 
             all_results.extend(results)
             print(f"  → {len(results)} αποτελέσματα")
@@ -235,6 +239,24 @@ def step4_web_search(queries: list[str]) -> list[dict]:
             print(f"  → Σφάλμα Tavily: {e}")
 
     unique_results = deduplicate_results(all_results)
+    hardcoded_set = set(HARDCODED_SOURCES)
+    unique_results = [r for r in unique_results if r.get("url") not in hardcoded_set]
+
+    hardcoded_rows: list[dict] = []
+    full_content = fetch_full_content(DLA_PIPER_URL, max_chars=10000)
+    dla_content = full_content[5000:] if len(full_content) > 5000 else full_content
+    if dla_content:
+        hardcoded_rows.append(
+            {
+                "title": "Transparent and Predictable Working Conditions Directive - DLA Piper",
+                "url": DLA_PIPER_URL,
+                "content": dla_content,
+            },
+        )
+        print(f"  ✓ Hardcoded πηγή: {DLA_PIPER_URL[:70]}…")
+
+    unique_results = hardcoded_rows + unique_results
+
     print(
         f"\nΣύνολο: {len(all_results)} αποτελέσματα "
         f"→ {len(unique_results)} μοναδικές πηγές"
