@@ -202,7 +202,11 @@ DLA_PIPER_URL = (
     "transparent-and-predictable-working-conditions-directive-deadline-for-implementation-approaches"
 )
 
-HARDCODED_SOURCES: list[str] = [DLA_PIPER_URL]
+ILO_WP101_URL = (
+    "https://webapps.ilo.org/static/english/intserv/working-papers/wp101/index.html"
+)
+
+HARDCODED_SOURCES: list[str] = [DLA_PIPER_URL, ILO_WP101_URL]
 
 
 def step4_web_search(queries: list[str]) -> list[dict]:
@@ -254,6 +258,18 @@ def step4_web_search(queries: list[str]) -> list[dict]:
             },
         )
         print(f"  ✓ Hardcoded πηγή: {DLA_PIPER_URL[:70]}…")
+
+    ilo_full = fetch_full_content(ILO_WP101_URL, max_chars=10000)
+    ilo_content = ilo_full[5000:] if len(ilo_full) > 5000 else ilo_full
+    if ilo_content:
+        hardcoded_rows.append(
+            {
+                "title": "ILO Working Paper - Employment conditions",
+                "url": ILO_WP101_URL,
+                "content": ilo_content,
+            },
+        )
+        print(f"  ✓ Hardcoded πηγή: {ILO_WP101_URL[:70]}…")
 
     unique_results = hardcoded_rows + unique_results
 
