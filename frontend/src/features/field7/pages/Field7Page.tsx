@@ -28,12 +28,6 @@ export function Field7Page() {
   return (
     <ErrorBoundary fallbackTitle="Σφάλμα στο Πεδίο 7">
       <div className="feature-page page-shell">
-        <header className="page-hero">
-          <p className="page-hero__eyebrow">Field 7 Workflow</p>
-          <p className="page-hero__subtitle">
-            Αντιστοίχιση του νόμου με τους 17 Στόχους Βιώσιμης Ανάπτυξης (SDGs) του ΟΗΕ.
-          </p>
-        </header>
         <h1 className="feature-page__title">Πεδίο 7 — Συμβατότητα με SDGs</h1>
         {state.currentStep === 1 && <Step1Classify state={state} dispatch={dispatch} />}
         {state.currentStep === 2 && <Step2Result state={state} dispatch={dispatch} />}

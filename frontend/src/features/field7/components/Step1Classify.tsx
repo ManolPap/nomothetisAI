@@ -33,12 +33,12 @@ export function Step1Classify({ state, dispatch }: Props) {
 
   useEffect(() => {
     if (!finalLawFile) return
-    const same =
-      state.file &&
-      state.file.name === finalLawFile.name &&
-      state.file.size === finalLawFile.size &&
-      state.file.lastModified === finalLawFile.lastModified
-    if (!same) {
+    if (
+      !state.file ||
+      state.file.name !== finalLawFile.name ||
+      state.file.size !== finalLawFile.size ||
+      state.file.lastModified !== finalLawFile.lastModified
+    ) {
       dispatch({ type: 'SET_FILE', file: finalLawFile })
     }
   }, [dispatch, finalLawFile, state.file])
@@ -67,7 +67,6 @@ export function Step1Classify({ state, dispatch }: Props) {
         title="Έλεγχος αντιστοίχισης SDGs"
         stepNumber={1}
         totalSteps={2}
-        description="Ανέβασε το νόμο. Το AI θα προτείνει SDGs με υποστόχους και αιτιολόγηση. Αποδεξου ή απόρριψε καθένα."
       />
 
       <FileUploader

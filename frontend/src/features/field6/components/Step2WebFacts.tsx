@@ -119,15 +119,15 @@ export function Step2WebFacts({ state, dispatch }: Props) {
       nextDisabled={!canContinue}
       isLoading={state.webStatus === 'loading'}
     >
-      <StepHeader title="Επιλογή Web Facts & Πηγών" stepNumber={2} totalSteps={4} />
+      <StepHeader title="Επιλογή Συναφών Πρακτικών" stepNumber={2} totalSteps={4} />
 
-      {state.webStatus === 'loading' && <LoadingPanel message="Αναζήτηση web facts…" />}
+      {state.webStatus === 'loading' && <LoadingPanel message="Αναζήτηση πρακτικών…" />}
       {state.webError && <ErrorBanner message={state.webError} onRetry={fetchFacts} />}
 
       {state.webStatus === 'ready' && (
         <>
           <section className="facts-section">
-            <h3>Facts</h3>
+            <h3>Συναφείς Πρακτικές</h3>
             {hasFacts ? (
               <ul className="checkbox-list">
                 {factItems.map((item, i) => {

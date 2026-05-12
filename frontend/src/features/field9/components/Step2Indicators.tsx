@@ -44,7 +44,7 @@ export function Step2Indicators({ state, dispatch }: Props) {
     >
       <StepHeader title="Επιλογή Δεικτών" stepNumber={2} totalSteps={3} />
 
-      {state.suggestStatus === 'loading' && <LoadingPanel message="Ανάκτηση προτάσεων δεικτών…" />}
+      {state.suggestStatus === 'loading' && <LoadingPanel message="Ανάκτηση προτεινόμενων δεικτών…" />}
       {state.suggestError && <ErrorBanner message={state.suggestError} onRetry={fetchSuggestions} />}
 
       {state.suggestStatus === 'ready' && (

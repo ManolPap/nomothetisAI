@@ -1,4 +1,4 @@
-import { type Dispatch, useMemo, useState } from 'react'
+import { type Dispatch, useMemo } from 'react'
 import { StepHeader } from '../../../shared/ui/StepHeader'
 import { StepContainer } from '../../../shared/ui/StepContainer'
 import type { Field7Action, Field7State } from '../state/reducer'
@@ -28,18 +28,7 @@ const ALL_SDGS = [
   { id: 17, title: 'Συνεργασία για τους Στόχους', color: '#19486A' },
 ] as const
 
-function buildClipboardText(acceptedTitles: Array<{ id: number; title: string }>): string {
-  if (acceptedTitles.length === 0) return ''
-  const lines = ['7. Συμβατότητα με τους Στόχους Βιώσιμης Ανάπτυξης (SDGs):', '']
-  for (const { id, title } of acceptedTitles) {
-    lines.push(`☑ SDG ${id}: ${title}`)
-  }
-  return lines.join('\n')
-}
-
 export function Step2Result({ state, dispatch }: Props) {
-  const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>('idle')
-
   const accepted = useMemo(
     () =>
       state.matches
@@ -50,29 +39,16 @@ export function Step2Result({ state, dispatch }: Props) {
 
   const acceptedIds = useMemo(() => new Set(accepted.map((item) => item.id)), [accepted])
 
-  const clipboardText = useMemo(() => buildClipboardText(accepted), [accepted])
-
-  async function handleCopy() {
-    if (!clipboardText) return
-    try {
-      await navigator.clipboard.writeText(clipboardText)
-      setCopyState('copied')
-      setTimeout(() => setCopyState('idle'), 2500)
-    } catch {
-      setCopyState('failed')
-      setTimeout(() => setCopyState('idle'), 2500)
-    }
-  }
-
   return (
     <StepContainer
       onBack={() => dispatch({ type: 'GO_TO_STEP', step: 1 })}
+      showContinueHome
     >
       <StepHeader
         title="Τελικό αποτέλεσμα — Πεδίο 7"
         stepNumber={2}
         totalSteps={2}
-        description="Τα αποδεκτά SDGs εμφανίζονται ως checkboxes, έτοιμα για το template της Βουλής."
+        description="Τα αποδεκτά SDGs εμφανίζονται ως checkboxes."
       />
 
       <div className="field7-template">
@@ -96,16 +72,6 @@ export function Step2Result({ state, dispatch }: Props) {
             )
           })}
         </div>
-      </div>
-
-      <div className="field7-template__actions">
-        <button
-          type="button"
-          className="btn btn-secondary"
-          onClick={handleCopy}
-        >
-          {copyState === 'copied' ? 'Αντιγράφηκε ✓' : copyState === 'failed' ? 'Αποτυχία αντιγραφής' : 'Αντιγραφή'}
-        </button>
       </div>
 
       <div className="field7-step2-complete">

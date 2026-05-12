@@ -36,6 +36,7 @@ export function Step3DataTable({ state, dispatch }: Props) {
     <StepContainer
       onBack={() => dispatch({ type: 'GO_TO_STEP', step: 2 })}
       isLoading={state.fetchStatus === 'loading'}
+      showContinueHome
     >
       <StepHeader title="Δεδομένα Δεικτών" stepNumber={3} totalSteps={3} />
 
