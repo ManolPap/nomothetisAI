@@ -10,11 +10,19 @@ import type {
 
 export type StepStatus = 'idle' | 'loading' | 'ready' | 'error'
 
+/** Επεξεργάσιμη στήλη προεπισκόπησης· null = προέρχεται από totals / articles. */
+export interface Field23ReportPreviewCells {
+  participants: string | null
+  adopted: string | null
+  not_adopted: string | null
+}
+
 export interface Field23ReportDraft {
   totals: ConsultationReportTotals
   articles_section: ConsultationReportArticleSection[]
   final_preview_text: string
   llm_status: 'ok' | 'fallback' | 'partial' | null
+  previewCells: Field23ReportPreviewCells
 }
 
 export const initialField23ReportDraft: Field23ReportDraft = {
@@ -27,6 +35,7 @@ export const initialField23ReportDraft: Field23ReportDraft = {
   articles_section: [],
   final_preview_text: '',
   llm_status: null,
+  previewCells: { participants: null, adopted: null, not_adopted: null },
 }
 
 export interface Field23State {
@@ -106,7 +115,12 @@ export type Field23Action =
     }
   | {
       type: 'REPORT_GENERATION_SUCCESS'
-      draft: Field23ReportDraft
+      draft: Omit<Field23ReportDraft, 'previewCells'>
+    }
+  | {
+      type: 'SET_REPORT_PREVIEW_CELL'
+      cell: keyof Field23ReportPreviewCells
+      value: string | null
     }
   | { type: 'REPORT_GENERATION_ERROR'; error: string }
   | { type: 'GO_TO_STEP'; step: 1 | 2 | 3 | 4 }
@@ -260,8 +274,21 @@ export function field23Reducer(state: Field23State, action: Field23Action): Fiel
         ...state,
         reportStatus: 'ready',
         reportError: null,
-        reportDraft: action.draft,
+        reportDraft: {
+          ...action.draft,
+          previewCells: { participants: null, adopted: null, not_adopted: null },
+        },
       }
+    case 'SET_REPORT_PREVIEW_CELL': {
+      const prev = state.reportDraft.previewCells
+      return {
+        ...state,
+        reportDraft: {
+          ...state.reportDraft,
+          previewCells: { ...prev, [action.cell]: action.value },
+        },
+      }
+    }
     case 'REPORT_GENERATION_ERROR':
       return { ...state, reportStatus: 'error', reportError: action.error }
     case 'GO_TO_STEP':

@@ -57,6 +57,7 @@ describe('field23Reducer', () => {
         ],
         final_preview_text: 'generated preview',
         llm_status: 'ok' as const,
+        previewCells: { participants: null, adopted: null, not_adopted: null },
       },
     }
     const next = field23Reducer(withAttributionAndReport, { type: 'SELECT_DIFF', index: 1 })
@@ -90,6 +91,39 @@ describe('field23Reducer', () => {
     expect(next.reportStatus).toBe('ready')
     expect(next.reportDraft.final_preview_text).toBe('backend preview')
     expect(next.reportDraft.articles_section).toHaveLength(1)
+    expect(next.reportDraft.previewCells).toEqual({
+      participants: null,
+      adopted: null,
+      not_adopted: null,
+    })
+  })
+
+  it('updates preview cell text', () => {
+    const base = field23Reducer(initialField23State, {
+      type: 'REPORT_GENERATION_SUCCESS',
+      draft: {
+        totals: { comments_total: 1, adopted_total: 1, not_adopted_total: 0, participants_total: 5 },
+        articles_section: [
+          {
+            article_number: '1',
+            article_title: 'T',
+            comment_count: 1,
+            adopted_count: 1,
+            not_adopted_count: 0,
+            adopted_summary: 'a',
+            not_adopted_summary: '',
+          },
+        ],
+        final_preview_text: '',
+        llm_status: 'ok',
+      },
+    })
+    const next = field23Reducer(base, {
+      type: 'SET_REPORT_PREVIEW_CELL',
+      cell: 'participants',
+      value: '99',
+    })
+    expect(next.reportDraft.previewCells.participants).toBe('99')
   })
 
   it('toggles filter change types', () => {

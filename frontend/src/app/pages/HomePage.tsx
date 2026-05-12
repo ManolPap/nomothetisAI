@@ -38,6 +38,87 @@ import {
   readField30HomeMeta,
 } from '../../features/field30/state/persist'
 
+function IconPlay({ className }: { className?: string }) {
+  return (
+    <svg className={className} width={18} height={18} viewBox="0 0 24 24" aria-hidden>
+      <path fill="currentColor" d="M8 5v14l11-7L8 5z" />
+    </svg>
+  )
+}
+
+function IconCheck({ className }: { className?: string }) {
+  return (
+    <svg className={className} width={18} height={18} viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        stroke="currentColor"
+        strokeWidth="2.25"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M20 6L9 17l-5-5"
+      />
+    </svg>
+  )
+}
+
+function WorkflowCardMainRow({
+  title,
+  description,
+  action,
+}: {
+  title: string
+  description: string
+  action: ReactNode
+}) {
+  return (
+    <div className="workflow-card__row">
+      <p className="workflow-card__summary">
+        <span className="workflow-card__field">{title}</span>
+        <span className="workflow-card__colon">: </span>
+        <span className="workflow-card__desc">{description}</span>
+      </p>
+      <div className="workflow-card__cta">{action}</div>
+    </div>
+  )
+}
+
+function Field4WorkflowResult({ result }: { result: AnalyzeField4Response }) {
+  return (
+    <section className="workflow-card-result" aria-label="Αποτέλεσμα Πεδίου 4">
+      <div className="field4-result__meta">
+        <span>{result.filename}</span>
+        <span>{result.articles_count} άρθρα</span>
+      </div>
+      <pre className="field4-result__text">{result.field_4_answer}</pre>
+    </section>
+  )
+}
+
+function Field29WorkflowResult({ result }: { result: AnalyzeField29Response }) {
+  return (
+    <section className="workflow-card-result" aria-label="Αποτέλεσμα Πεδίου 29">
+      <div className="field29-result__meta">
+        <span>{result.filename}</span>
+        <span>{result.articles_count} άρθρα</span>
+        <span>{result.field_29_articles_count} σχετικά με το Πεδίο 29</span>
+      </div>
+      <Field29ResultTable value={result.field_29_answer} rows={result.field_29_rows} />
+    </section>
+  )
+}
+
+function Field30WorkflowResult({ result }: { result: AnalyzeField30Response }) {
+  return (
+    <section className="workflow-card-result" aria-label="Αποτέλεσμα Πεδίου 30">
+      <div className="field29-result__meta">
+        <span>{result.filename}</span>
+        <span>{result.articles_count} άρθρα</span>
+        <span>{result.field_30_articles_count} σχετικά με το Πεδίο 30</span>
+      </div>
+      <Field30ResultTable rows={result.field_30_rows} fallbackText={result.field_30_answer} />
+    </section>
+  )
+}
+
 export function HomePage() {
   const { initialLawFile, finalLawFile, setInitialLawFile, setFinalLawFile } = useLawFiles()
   const canProceed = Boolean(initialLawFile && finalLawFile)
@@ -127,19 +208,38 @@ export function HomePage() {
 
     return (
       <article key={to} className={`workflow-card workflow-card--persisted ${modifierClass}`}>
-        <h3>{title}</h3>
-        <p>{description}</p>
-        {card.flowCompleted ? (
-          <>
-            <div className="workflow-card__actions">
+        <WorkflowCardMainRow
+          title={title}
+          description={description}
+          action={
+            card.flowCompleted ? (
               <Link
-                className={`btn btn-workflow-home-done${!canEnter ? ' btn-disabled' : ''}`}
+                className={`btn btn-workflow-done-icon${!canEnter ? ' btn-disabled' : ''}`}
                 to={to}
+                aria-label="Ολοκληρώθηκε — άνοιγμα ροής"
+                title="Ολοκληρώθηκε"
                 aria-disabled={!canEnter}
                 onClick={(e) => { if (!canEnter) e.preventDefault() }}
               >
-                Ολοκληρώθηκε
+                <IconCheck />
               </Link>
+            ) : (
+              <Link
+                className={`btn btn-primary btn-workflow-start${!canEnter ? ' btn-disabled' : ''}`}
+                to={to}
+                aria-label={card.hasSavedSession ? 'Συνέχεια ροής' : 'Εκκίνηση ροής'}
+                title={card.hasSavedSession ? 'Συνέχεια ροής' : 'Εκκίνηση ροής'}
+                aria-disabled={!canEnter}
+                onClick={(e) => { if (!canEnter) e.preventDefault() }}
+              >
+                <IconPlay />
+              </Link>
+            )
+          }
+        />
+        {card.flowCompleted && (
+          <>
+            <div className="workflow-card__footer-actions">
               <button
                 type="button"
                 className="btn btn-ghost workflow-card__reset"
@@ -149,15 +249,6 @@ export function HomePage() {
               </button>
             </div>
           </>
-        ) : (
-          <Link
-            className={`btn btn-primary${!canEnter ? ' btn-disabled' : ''}`}
-            to={to}
-            aria-disabled={!canEnter}
-            onClick={(e) => { if (!canEnter) e.preventDefault() }}
-          >
-            {card.hasSavedSession ? 'Συνέχεια ροής' : 'Εκκίνηση ροής'}
-          </Link>
         )}
       </article>
     )
@@ -194,18 +285,37 @@ export function HomePage() {
       const canEnter = hasFinalPdf || field6Card.hasSavedSession
       return (
         <article key={to} className="workflow-card workflow-card--field6">
-          <h3>{title}</h3>
-          <p>{description}</p>
-          {field6Card.flowCompleted ? (
-            <>
-              <Link
-                className={`btn btn-field6-home-done${!canEnter ? ' btn-disabled' : ''}`}
-                to={to}
-                aria-disabled={!canEnter}
-                onClick={(e) => { if (!canEnter) e.preventDefault() }}
-              >
-                Ολοκληρώθηκε
-              </Link>
+          <WorkflowCardMainRow
+            title={title}
+            description={description}
+            action={
+              field6Card.flowCompleted ? (
+                <Link
+                  className={`btn btn-workflow-done-icon${!canEnter ? ' btn-disabled' : ''}`}
+                  to={to}
+                  aria-label="Ολοκληρώθηκε — άνοιγμα ροής"
+                  title="Ολοκληρώθηκε"
+                  aria-disabled={!canEnter}
+                  onClick={(e) => { if (!canEnter) e.preventDefault() }}
+                >
+                  <IconCheck />
+                </Link>
+              ) : (
+                <Link
+                  className={`btn btn-primary btn-workflow-start${startDisabled ? ' btn-disabled' : ''}`}
+                  to={to}
+                  aria-label={field6Card.hasSavedSession ? 'Συνέχιση ροής' : 'Εκκίνηση ροής'}
+                  title={field6Card.hasSavedSession ? 'Συνέχιση ροής' : 'Εκκίνηση ροής'}
+                  aria-disabled={startDisabled}
+                  onClick={(e) => { if (startDisabled) e.preventDefault() }}
+                >
+                  <IconPlay />
+                </Link>
+              )
+            }
+          />
+          {field6Card.flowCompleted && (
+            <div className="workflow-card__footer-actions">
               <button
                 type="button"
                 className="btn btn-ghost workflow-card__reset"
@@ -213,16 +323,7 @@ export function HomePage() {
               >
                 Επαναφορά ροής
               </button>
-            </>
-          ) : (
-            <Link
-              className={`btn btn-primary${startDisabled ? ' btn-disabled' : ''}`}
-              to={to}
-              aria-disabled={startDisabled}
-              onClick={(e) => { if (startDisabled) e.preventDefault() }}
-            >
-              {field6Card.hasSavedSession ? 'Συνέχιση ροής' : 'Εκκίνηση ροής'}
-            </Link>
+            </div>
           )}
         </article>
       )
@@ -234,18 +335,37 @@ export function HomePage() {
       const canEnter = hasFinalPdf || field7Card.hasSavedSession
       return (
         <article key={to} className="workflow-card workflow-card--field7">
-          <h3>{title}</h3>
-          <p>{description}</p>
-          {field7Card.flowCompleted ? (
-            <>
-              <Link
-                className={`btn btn-field7-home-done${!canEnter ? ' btn-disabled' : ''}`}
-                to={to}
-                aria-disabled={!canEnter}
-                onClick={(e) => { if (!canEnter) e.preventDefault() }}
-              >
-                Ολοκληρώθηκε
-              </Link>
+          <WorkflowCardMainRow
+            title={title}
+            description={description}
+            action={
+              field7Card.flowCompleted ? (
+                <Link
+                  className={`btn btn-workflow-done-icon${!canEnter ? ' btn-disabled' : ''}`}
+                  to={to}
+                  aria-label="Ολοκληρώθηκε — άνοιγμα ροής"
+                  title="Ολοκληρώθηκε"
+                  aria-disabled={!canEnter}
+                  onClick={(e) => { if (!canEnter) e.preventDefault() }}
+                >
+                  <IconCheck />
+                </Link>
+              ) : (
+                <Link
+                  className={`btn btn-primary btn-workflow-start${startDisabled ? ' btn-disabled' : ''}`}
+                  to={to}
+                  aria-label={field7Card.hasSavedSession ? 'Συνέχιση ροής' : 'Εκκίνηση ροής'}
+                  title={field7Card.hasSavedSession ? 'Συνέχιση ροής' : 'Εκκίνηση ροής'}
+                  aria-disabled={startDisabled}
+                  onClick={(e) => { if (startDisabled) e.preventDefault() }}
+                >
+                  <IconPlay />
+                </Link>
+              )
+            }
+          />
+          {field7Card.flowCompleted && (
+            <div className="workflow-card__footer-actions">
               <button
                 type="button"
                 className="btn btn-ghost workflow-card__reset"
@@ -253,16 +373,7 @@ export function HomePage() {
               >
                 Επαναφορά ροής
               </button>
-            </>
-          ) : (
-            <Link
-              className={`btn btn-primary${startDisabled ? ' btn-disabled' : ''}`}
-              to={to}
-              aria-disabled={startDisabled}
-              onClick={(e) => { if (startDisabled) e.preventDefault() }}
-            >
-              {field7Card.hasSavedSession ? 'Συνέχιση ροής' : 'Εκκίνηση ροής'}
-            </Link>
+            </div>
           )}
         </article>
       )
@@ -272,18 +383,37 @@ export function HomePage() {
       const canEnter = canProceed || field9Card.hasSavedSession
       return (
         <article key={to} className="workflow-card workflow-card--field9">
-          <h3>{title}</h3>
-          <p>{description}</p>
-          {field9Card.flowCompleted ? (
-            <>
-              <Link
-                className={`btn btn-field9-home-done${!canEnter ? ' btn-disabled' : ''}`}
-                to={to}
-                aria-disabled={!canEnter}
-                onClick={(e) => { if (!canEnter) e.preventDefault() }}
-              >
-                Ολοκληρώθηκε
-              </Link>
+          <WorkflowCardMainRow
+            title={title}
+            description={description}
+            action={
+              field9Card.flowCompleted ? (
+                <Link
+                  className={`btn btn-workflow-done-icon${!canEnter ? ' btn-disabled' : ''}`}
+                  to={to}
+                  aria-label="Ολοκληρώθηκε — άνοιγμα ροής"
+                  title="Ολοκληρώθηκε"
+                  aria-disabled={!canEnter}
+                  onClick={(e) => { if (!canEnter) e.preventDefault() }}
+                >
+                  <IconCheck />
+                </Link>
+              ) : (
+                <Link
+                  className={`btn btn-primary btn-workflow-start${needsPdfs && !canProceed ? ' btn-disabled' : ''}`}
+                  to={to}
+                  aria-label={field9Card.hasSavedSession ? 'Συνέχιση ροής' : 'Εκκίνηση ροής'}
+                  title={field9Card.hasSavedSession ? 'Συνέχιση ροής' : 'Εκκίνηση ροής'}
+                  aria-disabled={needsPdfs && !canProceed}
+                  onClick={(e) => { if (needsPdfs && !canProceed) e.preventDefault() }}
+                >
+                  <IconPlay />
+                </Link>
+              )
+            }
+          />
+          {field9Card.flowCompleted && (
+            <div className="workflow-card__footer-actions">
               <button
                 type="button"
                 className="btn btn-ghost workflow-card__reset"
@@ -291,16 +421,7 @@ export function HomePage() {
               >
                 Επαναφορά ροής
               </button>
-            </>
-          ) : (
-            <Link
-              className={`btn btn-primary${needsPdfs && !canProceed ? ' btn-disabled' : ''}`}
-              to={to}
-              aria-disabled={needsPdfs && !canProceed}
-              onClick={(e) => { if (needsPdfs && !canProceed) e.preventDefault() }}
-            >
-              {field9Card.hasSavedSession ? 'Συνέχιση ροής' : 'Εκκίνηση ροής'}
-            </Link>
+            </div>
           )}
         </article>
       )
@@ -309,18 +430,37 @@ export function HomePage() {
     if (to === '/field23') {
       return (
         <article key={to} className="workflow-card workflow-card--field23">
-          <h3>{title}</h3>
-          <p>{description}</p>
-          {field23Card.flowCompleted ? (
-            <>
-              <Link
-                className={`btn btn-field23-home-done${!canEnterField23 ? ' btn-disabled' : ''}`}
-                to={to}
-                aria-disabled={!canEnterField23}
-                onClick={(e) => { if (!canEnterField23) e.preventDefault() }}
-              >
-                Ολοκληρώθηκε
-              </Link>
+          <WorkflowCardMainRow
+            title={title}
+            description={description}
+            action={
+              field23Card.flowCompleted ? (
+                <Link
+                  className={`btn btn-workflow-done-icon${!canEnterField23 ? ' btn-disabled' : ''}`}
+                  to={to}
+                  aria-label="Ολοκληρώθηκε — άνοιγμα ροής"
+                  title="Ολοκληρώθηκε"
+                  aria-disabled={!canEnterField23}
+                  onClick={(e) => { if (!canEnterField23) e.preventDefault() }}
+                >
+                  <IconCheck />
+                </Link>
+              ) : (
+                <Link
+                  className={`btn btn-primary btn-workflow-start${!canEnterField23 ? ' btn-disabled' : ''}`}
+                  to={to}
+                  aria-label={field23Card.hasSavedSession ? 'Συνέχιση ροής' : 'Εκκίνηση ροής'}
+                  title={field23Card.hasSavedSession ? 'Συνέχιση ροής' : 'Εκκίνηση ροής'}
+                  aria-disabled={!canEnterField23}
+                  onClick={(e) => { if (!canEnterField23) e.preventDefault() }}
+                >
+                  <IconPlay />
+                </Link>
+              )
+            }
+          />
+          {field23Card.flowCompleted && (
+            <div className="workflow-card__footer-actions">
               <button
                 type="button"
                 className="btn btn-ghost workflow-card__reset"
@@ -328,16 +468,7 @@ export function HomePage() {
               >
                 Επαναφορά ροής
               </button>
-            </>
-          ) : (
-            <Link
-              className={`btn btn-primary${!canEnterField23 ? ' btn-disabled' : ''}`}
-              to={to}
-              aria-disabled={!canEnterField23}
-              onClick={(e) => { if (!canEnterField23) e.preventDefault() }}
-            >
-              {field23Card.hasSavedSession ? 'Συνέχιση ροής' : 'Εκκίνηση ροής'}
-            </Link>
+            </div>
           )}
         </article>
       )
@@ -365,16 +496,22 @@ export function HomePage() {
 
     return (
       <article key={to} className="workflow-card">
-        <h3>{title}</h3>
-        <p>{description}</p>
-        <Link
-          className={`btn btn-primary${genericDisabled ? ' btn-disabled' : ''}`}
-          to={to}
-          aria-disabled={genericDisabled}
-          onClick={(e) => { if (genericDisabled) e.preventDefault() }}
-        >
-          Εκκίνηση ροής
-        </Link>
+        <WorkflowCardMainRow
+          title={title}
+          description={description}
+          action={(
+            <Link
+              className={`btn btn-primary btn-workflow-start${genericDisabled ? ' btn-disabled' : ''}`}
+              to={to}
+              aria-label="Εκκίνηση ροής"
+              title="Εκκίνηση ροής"
+              aria-disabled={genericDisabled}
+              onClick={(e) => { if (genericDisabled) e.preventDefault() }}
+            >
+              <IconPlay />
+            </Link>
+          )}
+        />
       </article>
     )
   }
@@ -428,8 +565,10 @@ export function HomePage() {
         {sections.map((section) => (
           <article key={section.code} className="home-page-section">
             <header className="home-page-section__header">
-              <p className="home-page-section__code">{section.code}</p>
-              <h2>{section.title}</h2>
+              <h2 className="home-page-section__title">
+                <span className="home-page-section__code">{section.code}.</span>
+                <span className="home-page-section__title-text">{section.title}</span>
+              </h2>
             </header>
             {section.routes.length > 0 ? (
               <div className="workflow-grid" aria-label={`Ροές για την ενότητα ${section.code}`}>

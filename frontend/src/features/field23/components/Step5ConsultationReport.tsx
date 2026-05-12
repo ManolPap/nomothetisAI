@@ -54,10 +54,15 @@ export function Step5ConsultationReport({ state, dispatch }: Props) {
   return (
     <StepContainer
       onBack={() => dispatch({ type: 'GO_TO_STEP', step: 3 })}
-      onNext={() => dispatch({ type: 'MARK_FLOW_COMPLETED' })}
+      onNext={
+        !state.flowCompleted && canComplete
+          ? () => dispatch({ type: 'MARK_FLOW_COMPLETED' })
+          : undefined
+      }
       nextLabel="Ολοκληρώθηκε"
       nextClassName="btn-field23-complete"
-      nextDisabled={state.flowCompleted || !canComplete}
+      nextDisabled={false}
+      showContinueHome={state.flowCompleted}
     >
       <StepHeader
         title="Πεδίο 23 — Έκθεση Διαβούλευσης"
@@ -148,12 +153,17 @@ export function Step5ConsultationReport({ state, dispatch }: Props) {
           {draft.articles_section.length === 0 ? (
             <pre>{draft.final_preview_text || 'Δεν υπάρχει ακόμα generated preview.'}</pre>
           ) : (
-            <ConsultationReportPreviewTable
-              participantsTotal={draft.totals.participants_total}
-              articles={draft.articles_section}
-            />
+            <ConsultationReportPreviewTable draft={draft} dispatch={dispatch} />
           )}
         </section>
+      </div>
+
+      <div className="field6-step4-complete">
+        {state.flowCompleted && (
+          <p className="field6-step4-complete__done" role="status">
+            Η ροή σημειώθηκε ως ολοκληρωμένη στην αρχική.
+          </p>
+        )}
       </div>
     </StepContainer>
   )
