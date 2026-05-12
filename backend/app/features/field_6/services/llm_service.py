@@ -333,13 +333,17 @@ def step5_extract_facts(
 
 
 def _strip_synthesis_fact_markers_from_output(text: str) -> str:
-    """Αφαιρεί ετικέτες FACT_* που το μοντέλο μερικές φορές αντιγράφει από τα facts."""
+    """Αφαιρεί ετικέτες FACT_* και URLs από το σύνθετο κείμενο."""
     text = re.sub(r"\s*\(FACT_iii\)\s*", " ", text, flags=re.IGNORECASE)
     text = re.sub(r"\s*\(FACT_ii\)\s*", " ", text, flags=re.IGNORECASE)
     text = re.sub(r"\s*\(FACT_i\)\s*", " ", text, flags=re.IGNORECASE)
     text = re.sub(r"\s*FACT_iii\s*", " ", text, flags=re.IGNORECASE)
     text = re.sub(r"\s*FACT_ii\s*", " ", text, flags=re.IGNORECASE)
     text = re.sub(r"\s*FACT_i\s*", " ", text, flags=re.IGNORECASE)
+    # (https://...) / (http://...)
+    text = re.sub(r"\(\s*https?://[^)]+\)", " ", text, flags=re.IGNORECASE)
+    # γυμνά https://... ή http://... (μέχρι κενό, ), ή ])
+    text = re.sub(r"https?://[^\s)\]]+", " ", text, flags=re.IGNORECASE)
     text = re.sub(r"  +", " ", text)
     return text.strip()
 
