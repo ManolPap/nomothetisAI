@@ -1,5 +1,6 @@
 """LLM-based βήματα για το Πεδίο 6 (step1, step3, step5, step6)."""
 
+import re
 from typing import Any, Literal
 
 from langchain_core.messages import HumanMessage, SystemMessage
@@ -123,16 +124,38 @@ def extract_llm_content(response: Any) -> str:
     return str(content)
 
 
+_METADATA_FIELD_KEYS = ("ΘΕΜΑ", "ΜΕΤΡΑ", "ΥΠΟΥΡΓΕΙΟ", "ΤΟΜΕΑΣ", "ΟΔΗΓΙΑ")
+_METADATA_KEY_LINE_RE = re.compile("^(" + "|".join(_METADATA_FIELD_KEYS) + r")\s*:\s*(.*)$")
+
+
 def parse_extraction_fields(text: str) -> dict:
     """Κάνει parse το structured output του Βήματος 1."""
     fields: dict[str, str] = {}
-    for line in text.splitlines():
-        if ":" not in line:
+    lines = text.splitlines()
+    i = 0
+    while i < len(lines):
+        raw = lines[i].strip()
+        m = _METADATA_KEY_LINE_RE.match(raw)
+        if not m:
+            i += 1
             continue
-        key, value = line.split(":", 1)
-        clean_key = key.strip().upper()
-        clean_value = value.strip().strip('"').strip("'")
-        fields[clean_key] = clean_value
+        key = m.group(1)
+        rest = m.group(2).strip().strip('"').strip("'")
+        if key == "ΜΕΤΡΑ":
+            chunks: list[str] = []
+            if rest:
+                chunks.append(rest)
+            i += 1
+            while i < len(lines):
+                nxt = lines[i].rstrip()
+                if _METADATA_KEY_LINE_RE.match(nxt.strip()):
+                    break
+                chunks.append(nxt)
+                i += 1
+            fields[key] = "\n".join(chunks).strip()
+        else:
+            fields[key] = rest
+            i += 1
 
     return {
         "topic": fields.get("ΘΕΜΑ", "Μη διαθέσιμο"),
@@ -179,15 +202,13 @@ def step1_extract_metadata(law_structured: str) -> dict:
 
 def step3_generate_queries(metadata: dict) -> list[str]:
     """
-    Παράγει 5 queries αντίστοιχα με τη δομή του πεδίου 6:
-    Query 1: Γενική αναζήτηση θέματος
-    Query 2: Πρακτικές χωρών ΕΕ/ΟΟΣΑ (υποπεδίο i)
-    Query 3: Όργανα ΕΕ — Οδηγίες, εκθέσεις (υποπεδίο ii)
-    Query 4: Διεθνείς οργανισμοί με αξιολογήσεις (υποπεδίο iii)
-    Query 5: Πρόσφατες εξελίξεις 2024-2025
+    Παράγει 3 queries για Tavily (υποπεδία ii, iii και πρόσφατες εξελίξεις):
+    Query 1: Όργανα ΕΕ — Οδηγίες, εκθέσεις
+    Query 2: Διεθνείς οργανισμοί με αξιολογήσεις
+    Query 3: Πρόσφατες εξελίξεις 2024-2025
     """
     print("\n" + "=" * 60)
-    print("ΒΗΜΑ 3: Παραγωγή 5 search queries (Gemini Flash Lite)")
+    print("ΒΗΜΑ 3: Παραγωγή 3 search queries (Gemini Flash Lite)")
     print("=" * 60)
 
     directive_info = (
@@ -211,11 +232,9 @@ def step3_generate_queries(metadata: dict) -> list[str]:
         q.strip()
         for q in text.strip().split("\n")
         if q.strip() and len(q.strip()) > 10
-    ][:5]
+    ][:3]
 
     labels = [
-        "Γενική αναζήτηση",
-        "Πρακτικές χωρών ΕΕ/ΟΟΣΑ",
         "Όργανα ΕΕ",
         "Διεθνείς οργανισμοί",
         "Πρόσφατες εξελίξεις 2024-2025",
@@ -254,15 +273,18 @@ def step5_extract_facts(
         lines.append(f"Πηγή {i}: {r['title']}")
         lines.append(f"URL: {r['url']}")
 
-        if i <= 3:
-            full_content = fetch_full_content(r["url"])
-            if full_content and len(full_content) > len(r["content"]):
-                lines.append(f"Περιεχόμενο (πλήρες): {full_content[:3000]}")
+        url = r.get("url") or ""
+        if "knowledge.dlapiper.com" in url:
+            lines.append(f"Περιεχόμενο: {(r.get('content') or '')[:6000]}")
+        elif "littler.com" in url:
+            full_content = fetch_full_content(url, max_chars=6000)
+            if full_content:
+                lines.append(f"Περιεχόμενο (πλήρες): {full_content[:6000]}")
                 print(f"  [Πηγή {i}] Fetch πλήρους περιεχομένου: {len(full_content)} χαρ.")
             else:
-                lines.append(f"Περιεχόμενο: {r['content'][:1500]}")
+                lines.append(f"Περιεχόμενο: {(r.get('content') or '')[:1500]}")
         else:
-            lines.append(f"Περιεχόμενο: {r['content'][:1500]}")
+            lines.append(f"Περιεχόμενο: {(r.get('content') or '')[:1500]}")
         lines.append("")
 
     search_context = "\n".join(lines) if lines else "Δεν βρέθηκαν αποτελέσματα."

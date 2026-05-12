@@ -19,7 +19,7 @@ export function webSearch(
   payload: { metadata: LawMetadata; nim_text: string },
   signal?: AbortSignal,
 ): Promise<WebSearchResponse> {
-  return postJson<WebSearchResponse>(buildUrl('/api/field-6/web-search'), payload, { signal, timeoutMs: 120_000 })
+  return postJson<WebSearchResponse>(buildUrl('/api/field-6/web-search'), payload, { signal, timeoutMs: 180_000 })
 }
 
 export function fetchEurostat(

@@ -49,6 +49,7 @@ TRUSTED_DOMAINS = [
     "oecd.org",
     "worldbank.org",
     "ilo.org",
+    "knowledge.dlapiper.com",
     "un.org",
     "who.int",
     "iea.org",
