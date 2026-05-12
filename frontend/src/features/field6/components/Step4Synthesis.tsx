@@ -4,7 +4,12 @@ import { StepContainer } from '../../../shared/ui/StepContainer'
 import { ErrorBanner } from '../../../shared/ui/ErrorBanner'
 import { isApiError } from '../../../shared/api/errors'
 import { synthesizeField6 } from '../api'
-import { buildEurostatText, buildSelectedSources, parseFactsText } from '../utils'
+import {
+  buildEurostatText,
+  buildSelectedFactsTextFromStructured,
+  buildSelectedSources,
+  parseFactsText,
+} from '../utils'
 import type { Field6Action, Field6State } from '../state/reducer'
 
 interface Props {
@@ -50,10 +55,20 @@ export function Step4Synthesis({ state, dispatch }: Props) {
   async function runSynthesis() {
     if (!state.metadata || !state.factsText) return
 
+    const structuredCount =
+      state.facts != null
+        ? state.facts.i.length + state.facts.ii.length + state.facts.iii.length
+        : 0
+    const fromStructured =
+      structuredCount > 0
+        ? buildSelectedFactsTextFromStructured(state.facts, state.selectedFactIndices)
+        : null
     const parsedFacts = parseFactsText(state.factsText)
-    const selectedFacts = parsedFacts
-      ? parsedFacts.filter((_, i) => state.selectedFactIndices.has(i)).join('\n')
-      : state.factsText
+    const selectedFacts =
+      fromStructured ??
+      (parsedFacts
+        ? parsedFacts.filter((_, i) => state.selectedFactIndices.has(i)).join('\n')
+        : state.factsText)
 
     const selectedEntries = Object.entries(state.eurostatData)
       .filter(([code]) => state.selectedCountryCodes.has(code))

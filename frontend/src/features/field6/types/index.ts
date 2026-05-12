@@ -17,8 +17,27 @@ export interface MetadataResponse {
   nim_text: string
 }
 
+export type FactCategory = 'i' | 'ii' | 'iii'
+
+export interface FactItem {
+  id: string
+  category: FactCategory
+  subject: string
+  instrument: string
+  finding: string
+  source_url: string
+  source_title?: string | null
+}
+
+export interface FactsPayload {
+  i: FactItem[]
+  ii: FactItem[]
+  iii: FactItem[]
+}
+
 export interface WebSearchResponse {
   sources: WebSource[]
+  facts: FactsPayload
   facts_text: string
 }
 

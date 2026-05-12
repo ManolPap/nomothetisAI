@@ -85,7 +85,7 @@ async def web_search(body: WebSearchRequest) -> WebSearchResponse:
     metadata_dict = body.metadata.model_dump()
     queries = step3_generate_queries(metadata_dict)
     search_results = step4_web_search(queries)
-    facts_text = step5_extract_facts(metadata_dict, search_results, nim_text=body.nim_text)
+    facts, facts_text = step5_extract_facts(metadata_dict, search_results, nim_text=body.nim_text)
 
     sources = [
         WebSource(
@@ -96,7 +96,7 @@ async def web_search(body: WebSearchRequest) -> WebSearchResponse:
         for r in search_results
     ]
 
-    return WebSearchResponse(sources=sources, facts_text=facts_text)
+    return WebSearchResponse(sources=sources, facts=facts, facts_text=facts_text)
 
 
 @router.post(

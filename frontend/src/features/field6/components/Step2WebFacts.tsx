@@ -7,8 +7,10 @@ import { EmptyState } from '../../../shared/ui/EmptyState'
 import { isApiError } from '../../../shared/api/errors'
 import { webSearch } from '../api'
 import type { Field6Action, Field6State } from '../state/reducer'
+import { FACT_CATEGORY_LABELS, factItemToDisplayText } from '../utils'
+import type { FactsPayload } from '../types'
 
-const CATEGORY_LABELS: Record<string, string> = {
+const CATEGORY_LABELS_LEGACY: Record<string, string> = {
   ΚΑΤΗΓΟΡΙΑ_i: 'Χώρες ΕΕ/ΟΟΣΑ',
   ΚΑΤΗΓΟΡΙΑ_ii: 'Όργανα ΕΕ',
   ΚΑΤΗΓΟΡΙΑ_iii: 'Διεθνείς Οργανισμοί',
@@ -26,7 +28,7 @@ function buildFactDisplayItems(factsText: string): FactDisplayItem[] {
     if (!line) continue
     const catMatch = line.match(/^(ΚΑΤΗΓΟΡΙΑ_\w+)/i)
     if (catMatch) {
-      const label = CATEGORY_LABELS[catMatch[1]] ?? catMatch[1]
+      const label = CATEGORY_LABELS_LEGACY[catMatch[1]] ?? catMatch[1]
       items.push({ kind: 'header', label })
       continue
     }
@@ -37,6 +39,20 @@ function buildFactDisplayItems(factsText: string): FactDisplayItem[] {
       .trim()
     if (!content || content === '-') continue
     items.push({ kind: 'fact', text: content, idx: factIdx++ })
+  }
+  return items
+}
+
+function buildStructuredFactDisplayItems(facts: FactsPayload): FactDisplayItem[] {
+  const items: FactDisplayItem[] = []
+  let factIdx = 0
+  for (const cat of ['i', 'ii', 'iii'] as const) {
+    const list = facts[cat]
+    if (list.length === 0) continue
+    items.push({ kind: 'header', label: FACT_CATEGORY_LABELS[cat] })
+    for (const it of list) {
+      items.push({ kind: 'fact', text: factItemToDisplayText(it), idx: factIdx++ })
+    }
   }
   return items
 }
@@ -76,7 +92,12 @@ export function Step2WebFacts({ state, dispatch }: Props) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { if (state.webStatus === 'idle') fetchFacts() }, [])
 
-  const factItems = state.factsText ? buildFactDisplayItems(state.factsText) : []
+  const factItems =
+    state.facts != null
+      ? buildStructuredFactDisplayItems(state.facts)
+      : state.factsText
+        ? buildFactDisplayItems(state.factsText)
+        : []
   const hasFacts = factItems.some((it) => it.kind === 'fact')
   const canContinue = state.webStatus === 'ready' && state.selectedFactIndices.size > 0
 

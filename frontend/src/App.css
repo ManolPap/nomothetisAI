@@ -788,6 +788,11 @@ a {
   word-break: break-word;
 }
 
+.fact-source-link {
+  word-break: break-all;
+  color: var(--primary);
+}
+
 .year-values {
   display: flex;
   flex-wrap: wrap;

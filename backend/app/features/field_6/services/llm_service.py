@@ -1,8 +1,9 @@
 """LLM-based βήματα για το Πεδίο 6 (step1, step3, step5, step6)."""
 
-from typing import Any
+from typing import Any, Literal
 
 from langchain_core.messages import HumanMessage, SystemMessage
+from pydantic import BaseModel, Field
 
 from app.features.field_6.config import get_llm_fast, get_llm_synthesis
 from app.features.field_6.prompt import (
@@ -15,6 +16,82 @@ from app.features.field_6.prompt import (
     SYNTHESIS_SYSTEM,
     build_synthesis_human,
 )
+from app.features.field_6.schemas import FactItem, FactsPayload
+
+# -------------------------------------------------------
+# Structured facts (βήμα 5)
+# -------------------------------------------------------
+
+
+class _FactRow(BaseModel):
+    subject: str = Field(default="", description="Χώρα/λίστα, όργανο ΕΕ ή διεθνής οργανισμός")
+    instrument: str = Field(default="", description="Νόμος, οδηγία, τίτλος")
+    finding: str = Field(default="", description="Εύρημα όπως στην πηγή")
+    source_url: str = Field(default="", description="URL")
+    source_title: str | None = Field(default=None, description="Τίτλος πηγής")
+
+
+class _FactsExtractionOut(BaseModel):
+    i: list[_FactRow] = Field(default_factory=list)
+    ii: list[_FactRow] = Field(default_factory=list)
+    iii: list[_FactRow] = Field(default_factory=list)
+
+
+def _row_nonempty(row: _FactRow) -> bool:
+    return bool(
+        (row.subject or "").strip()
+        or (row.instrument or "").strip()
+        or (row.finding or "").strip()
+        or (row.source_url or "").strip()
+    )
+
+
+def _build_facts_payload(raw: _FactsExtractionOut) -> FactsPayload:
+    def pack(cat: Literal["i", "ii", "iii"], rows: list[_FactRow]) -> list[FactItem]:
+        out: list[FactItem] = []
+        n = 0
+        for row in rows:
+            if not _row_nonempty(row):
+                continue
+            out.append(
+                FactItem(
+                    id=f"{cat}-{n}",
+                    category=cat,
+                    subject=(row.subject or "").strip(),
+                    instrument=(row.instrument or "").strip(),
+                    finding=(row.finding or "").strip(),
+                    source_url=(row.source_url or "").strip(),
+                    source_title=(row.source_title or "").strip() or None,
+                ),
+            )
+            n += 1
+        return out
+
+    return FactsPayload(i=pack("i", raw.i), ii=pack("ii", raw.ii), iii=pack("iii", raw.iii))
+
+
+def facts_payload_to_text(facts: FactsPayload) -> str:
+    """Ίδια λογική με την παλιά γραμμική μορφή για Eurostat και σύνθεση."""
+
+    def lines_for(cat_label: str, prefix: str, items: list[FactItem]) -> list[str]:
+        block = [cat_label]
+        if items:
+            for it in items:
+                block.append(
+                    f"{prefix}: {it.subject} | {it.instrument} | {it.finding} | {it.source_url}",
+                )
+        else:
+            block.append(f"{prefix}: -")
+        return block
+
+    parts: list[str] = []
+    parts.extend(lines_for("ΚΑΤΗΓΟΡΙΑ_i (Χώρες ΕΕ/ΟΟΣΑ):", "FACT_i", facts.i))
+    parts.append("")
+    parts.extend(lines_for("ΚΑΤΗΓΟΡΙΑ_ii (Όργανα ΕΕ):", "FACT_ii", facts.ii))
+    parts.append("")
+    parts.extend(lines_for("ΚΑΤΗΓΟΡΙΑ_iii (Διεθνείς Οργανισμοί):", "FACT_iii", facts.iii))
+    return "\n".join(parts)
+
 
 # -------------------------------------------------------
 # Helpers
@@ -147,16 +224,17 @@ def step5_extract_facts(
     metadata: dict,
     search_results: list[dict],
     nim_text: str,
-) -> str:
+) -> tuple[FactsPayload, str]:
     """
     Εξάγει συγκεκριμένα, επαληθεύσιμα facts από κάθε πηγή.
     Οργανώνει τα facts ανά υποπεδίο (i, ii, iii).
     Αν υπάρχουν NIM δεδομένα από EUR-Lex, τα προσθέτει στο i).
+    Επιστρέφει (FactsPayload, facts_text) όπου facts_text είναι η legacy μορφή για downstream.
     """
     from app.features.field_6.services.web_search import fetch_full_content
 
     print("\n" + "=" * 60)
-    print("ΒΗΜΑ 5: Εξαγωγή facts από πηγές (Gemini Flash Lite)")
+    print("ΒΗΜΑ 5: Εξαγωγή facts από πηγές (Gemini Flash Lite, structured)")
     print("=" * 60)
 
     lines: list[str] = []
@@ -185,7 +263,7 @@ def step5_extract_facts(
             "Αυτά τα δεδομένα αφορούν ΑΠΟΚΛΕΙΣΤΙΚΑ το υποπεδίο i) (Χώρες ΕΕ/ΟΟΣΑ).\n"
         )
 
-    response = get_llm_fast().invoke([
+    messages = [
         SystemMessage(content=FACTS_SYSTEM),
         HumanMessage(content=FACTS_HUMAN_TEMPLATE.format(
             topic=metadata["topic"],
@@ -193,16 +271,26 @@ def step5_extract_facts(
             nim_context=nim_context,
             search_context=search_context,
         )),
-    ])
+    ]
 
-    facts_text = extract_llm_content(response)
+    try:
+        structured_llm = get_llm_fast().with_structured_output(_FactsExtractionOut)
+        parsed = structured_llm.invoke(messages)
+        if not isinstance(parsed, _FactsExtractionOut):
+            raise TypeError(f"Unexpected structured output type: {type(parsed)}")
+        facts = _build_facts_payload(parsed)
+    except Exception as exc:
+        print(f"⚠️ Structured facts extraction απέτυχε ({exc!r}) — κενό αποτέλεσμα.")
+        facts = FactsPayload()
 
-    print("Facts που εξήχθησαν:")
+    facts_text = facts_payload_to_text(facts)
+
+    print("Facts που εξήχθησαν (structured):")
     print("-" * 40)
     print(facts_text)
     print("-" * 40)
 
-    return facts_text
+    return facts, facts_text
 
 
 # -------------------------------------------------------

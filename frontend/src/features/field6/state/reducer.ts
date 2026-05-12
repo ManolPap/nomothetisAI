@@ -1,6 +1,7 @@
 import type {
   EurostatCountryEntry,
   EurostatResponse,
+  FactsPayload,
   LawMetadata,
   MetadataResponse,
   SynthesizeResponse,
@@ -23,6 +24,8 @@ export interface Field6State {
   // Step 2
   webStatus: StepStatus
   sources: WebSource[]
+  /** Structured facts από το API· null σε παλιά persisted sessions. */
+  facts: FactsPayload | null
   factsText: string
   selectedFactIndices: Set<number>
   selectedSourceUrls: Set<string>
@@ -79,6 +82,7 @@ export const initialField6State: Field6State = {
   metadataError: null,
   webStatus: 'idle',
   sources: [],
+  facts: null,
   factsText: '',
   selectedFactIndices: new Set(),
   selectedSourceUrls: new Set(),
@@ -98,7 +102,7 @@ export const initialField6State: Field6State = {
 
 function invalidateFromStep2(): Partial<Field6State> {
   return {
-    webStatus: 'idle', sources: [], factsText: '', selectedFactIndices: new Set(),
+    webStatus: 'idle', sources: [], facts: null, factsText: '', selectedFactIndices: new Set(),
     selectedSourceUrls: new Set(), webError: null,
     eurostatStatus: 'idle', eurostatData: {}, indicatorName: '',
     selectedCountryCodes: new Set(), selectedYearsByCountry: {}, eurostatError: null,
@@ -151,6 +155,7 @@ export function field6Reducer(state: Field6State, action: Field6Action): Field6S
         ...state,
         webStatus: 'ready',
         sources: action.payload.sources,
+        facts: action.payload.facts,
         factsText: action.payload.facts_text,
         selectedFactIndices: new Set(),
         selectedSourceUrls: new Set(),
