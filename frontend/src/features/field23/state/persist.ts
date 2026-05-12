@@ -202,6 +202,13 @@ export function persistedToState(p: Field23PersistedV1): Field23State {
             articles_section: Array.isArray(p.reportDraft.articles_section)
               ? p.reportDraft.articles_section
               : initialField23State.reportDraft.articles_section,
+            previewCells:
+              p.reportDraft.previewCells && typeof p.reportDraft.previewCells === 'object'
+                ? {
+                    ...initialField23State.reportDraft.previewCells,
+                    ...p.reportDraft.previewCells,
+                  }
+                : initialField23State.reportDraft.previewCells,
           }
         : initialField23State.reportDraft,
 

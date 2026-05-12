@@ -1,12 +1,29 @@
+import type { Dispatch } from 'react'
 import type { ConsultationReportArticleSection } from '../types'
+import type { Field23Action, Field23ReportDraft, Field23ReportPreviewCells } from '../state/reducer'
 
 export function ConsultationReportPreviewTable({
-  participantsTotal,
-  articles,
+  draft,
+  dispatch,
+  readOnly = false,
 }: {
-  participantsTotal: number
-  articles: ConsultationReportArticleSection[]
+  draft: Field23ReportDraft
+  dispatch?: Dispatch<Field23Action>
+  readOnly?: boolean
 }) {
+  const { totals, articles_section: articles, previewCells } = draft
+  const participantsDisplay =
+    previewCells.participants ?? String(totals.participants_total ?? '')
+  const adoptedDisplay = previewCells.adopted ?? buildSectionSummary(articles, 'adopted')
+  const notAdoptedDisplay = previewCells.not_adopted ?? buildSectionSummary(articles, 'not_adopted')
+
+  const isReadOnly = readOnly || !dispatch
+
+  function setCell(cell: keyof Field23ReportPreviewCells, value: string) {
+    if (!dispatch) return
+    dispatch({ type: 'SET_REPORT_PREVIEW_CELL', cell, value })
+  }
+
   return (
     <div className="field23-preview-table-wrap">
       <table className="field23-preview-table">
@@ -27,13 +44,34 @@ export function ConsultationReportPreviewTable({
             </td>
             <td className="field23-preview-table__label">Αριθμός συμμετασχόντων</td>
             <td colSpan={2} className="field23-preview-table__value field23-preview-table__value--numeric">
-              {participantsTotal}
+              {isReadOnly ? (
+                participantsDisplay
+              ) : (
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  className="field23-preview-table__control field23-preview-table__control--numeric"
+                  aria-label="Αριθμός συμμετεχόντων (προεπισκόπηση)"
+                  value={participantsDisplay}
+                  onChange={(e) => setCell('participants', e.target.value)}
+                />
+              )}
             </td>
           </tr>
           <tr>
             <td className="field23-preview-table__label">Σχόλια που υιοθετήθηκαν</td>
             <td colSpan={2} className="field23-preview-table__value">
-              {buildSectionSummary(articles, 'adopted')}
+              {isReadOnly ? (
+                adoptedDisplay
+              ) : (
+                <textarea
+                  className="field23-preview-table__control"
+                  aria-label="Σχόλια που υιοθετήθηκαν (προεπισκόπηση)"
+                  rows={6}
+                  value={adoptedDisplay}
+                  onChange={(e) => setCell('adopted', e.target.value)}
+                />
+              )}
             </td>
           </tr>
           <tr>
@@ -41,7 +79,17 @@ export function ConsultationReportPreviewTable({
               Σχόλια που δεν υιοθετήθηκαν (συμπεριλαμβανόμενης επαρκούς αιτιολόγησης)
             </td>
             <td colSpan={2} className="field23-preview-table__value">
-              {buildSectionSummary(articles, 'not_adopted')}
+              {isReadOnly ? (
+                notAdoptedDisplay
+              ) : (
+                <textarea
+                  className="field23-preview-table__control"
+                  aria-label="Σχόλια που δεν υιοθετήθηκαν (προεπισκόπηση)"
+                  rows={8}
+                  value={notAdoptedDisplay}
+                  onChange={(e) => setCell('not_adopted', e.target.value)}
+                />
+              )}
             </td>
           </tr>
         </tbody>
