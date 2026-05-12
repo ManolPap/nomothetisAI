@@ -274,6 +274,57 @@ a {
   background: #0f6a32;
 }
 
+.btn-workflow-home-done {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #15803d;
+  color: #fff;
+  border-color: #116532;
+}
+
+.btn-workflow-home-done:hover:not(:disabled) {
+  background: #0f6a32;
+}
+
+.workflow-card--persisted .workflow-card__reset {
+  display: block;
+  width: 100%;
+  margin-top: 0.5rem;
+  text-align: center;
+}
+
+.workflow-card__actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.workflow-card__actions .workflow-card__reset {
+  margin-top: 0;
+}
+
+.workflow-card__result {
+  margin-top: 1rem;
+  text-align: left;
+}
+
+.workflow-card-result {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.workflow-card__result .field4-result__text,
+.workflow-card__result .field29-result__text {
+  max-height: 320px;
+}
+
+.workflow-card__result .field29-table-wrap {
+  max-height: 420px;
+}
+
 .workflow-card--field23 .workflow-card__reset {
   display: block;
   width: 100%;
