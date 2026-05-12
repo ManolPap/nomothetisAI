@@ -33,8 +33,14 @@ export function Field30ResultTable({ rows, fallbackText }: Props) {
         <tbody>
           {rows.map((row, index) => (
             <tr key={`${row.article}-${row.item_label}-${index}`}>
-              <td>{renderCell(`${row.item_label}) ${row.repealed_provision}`)}</td>
-              <td />
+              <td>{renderCell(row.evaluated_provision)}</td>
+              <td>
+                {renderCell(
+                  row.warning
+                    ? `Προειδοποίηση: ${row.warning}\n\n${row.repealed_provision}`
+                    : row.repealed_provision,
+                )}
+              </td>
             </tr>
           ))}
         </tbody>
