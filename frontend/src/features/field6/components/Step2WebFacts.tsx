@@ -81,13 +81,12 @@ let field6WebSearchInFlight = false
 export function Step2WebFacts({ state, dispatch }: Props) {
   const fetchFacts = useCallback(async () => {
     const meta = state.metadata
-    const nim = state.nimText
-    if (!meta || !nim.trim()) return
+    if (!meta) return
     if (field6WebSearchInFlight) return
     field6WebSearchInFlight = true
     dispatch({ type: 'WEB_LOADING' })
     try {
-      const result = await webSearch({ metadata: meta, nim_text: nim })
+      const result = await webSearch({ metadata: meta, nim_text: '' })
       dispatch({ type: 'WEB_SUCCESS', payload: result })
     } catch (e) {
       const msg = isApiError(e) ? e.userMessage() : 'Άγνωστο σφάλμα'
@@ -95,13 +94,13 @@ export function Step2WebFacts({ state, dispatch }: Props) {
     } finally {
       field6WebSearchInFlight = false
     }
-  }, [dispatch, state.metadata, state.nimText])
+  }, [dispatch, state.metadata])
 
   useEffect(() => {
     if (state.webStatus !== 'idle') return
-    if (!state.metadata || !state.nimText.trim()) return
+    if (!state.metadata) return
     void fetchFacts()
-  }, [fetchFacts, state.metadata, state.nimText, state.webStatus])
+  }, [fetchFacts, state.metadata, state.webStatus])
 
   const factItems =
     state.facts != null
