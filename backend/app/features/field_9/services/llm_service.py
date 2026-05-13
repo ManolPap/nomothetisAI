@@ -64,12 +64,17 @@ def step1_extract_metadata(law_structured: str) -> dict:
     print("ΒΗΜΑ 1: Εξαγωγή μεταδεδομένων νόμου (Gemini Flash Lite)")
     print("=" * 60)
 
-    response = get_llm_fast().invoke([
+    messages = [
         SystemMessage(content=METADATA_SYSTEM),
         HumanMessage(content=METADATA_HUMAN_TEMPLATE.format(
             law_structured=law_structured,
         )),
-    ])
+    ]
+    try:
+        response = get_llm_synthesis().invoke(messages)
+    except Exception as e:
+        print(f"⚠️ Fallback (σφάλμα: {e})")
+        response = get_llm_fast().invoke(messages)
 
     text = extract_llm_content(response)
     print(text)
@@ -107,7 +112,7 @@ def step3_generate_queries(metadata: dict) -> list[str]:
         else "Ο νόμος δεν ενσωματώνει συγκεκριμένη Οδηγία ΕΕ."
     )
 
-    response = get_llm_fast().invoke([
+    messages = [
         SystemMessage(content=QUERIES_SYSTEM),
         HumanMessage(content=QUERIES_HUMAN_TEMPLATE.format(
             topic=metadata["topic"],
@@ -115,7 +120,12 @@ def step3_generate_queries(metadata: dict) -> list[str]:
             sector=metadata["sector"],
             directive_info=directive_info,
         )),
-    ])
+    ]
+    try:
+        response = get_llm_synthesis().invoke(messages)
+    except Exception as e:
+        print(f"⚠️ Fallback (σφάλμα: {e})")
+        response = get_llm_fast().invoke(messages)
 
     text = extract_llm_content(response)
     queries = [
@@ -185,7 +195,7 @@ def step5_extract_facts(
             "Αυτά τα δεδομένα αφορούν ΑΠΟΚΛΕΙΣΤΙΚΑ το υποπεδίο i) (Χώρες ΕΕ/ΟΟΣΑ).\n"
         )
 
-    response = get_llm_fast().invoke([
+    messages = [
         SystemMessage(content=FACTS_SYSTEM),
         HumanMessage(content=FACTS_HUMAN_TEMPLATE.format(
             topic=metadata["topic"],
@@ -193,7 +203,12 @@ def step5_extract_facts(
             nim_context=nim_context,
             search_context=search_context,
         )),
-    ])
+    ]
+    try:
+        response = get_llm_synthesis().invoke(messages)
+    except Exception as e:
+        print(f"⚠️ Fallback (σφάλμα: {e})")
+        response = get_llm_fast().invoke(messages)
 
     facts_text = extract_llm_content(response)
 
@@ -222,7 +237,7 @@ def step6_synthesize_field6(
     print("ΒΗΜΑ 6: Σύνθεση Πεδίου 6 (Gemini 2.5 Flash)")
     print("=" * 60)
 
-    response = get_llm_synthesis().invoke([
+    messages = [
         SystemMessage(content=SYNTHESIS_SYSTEM),
         HumanMessage(content=build_synthesis_human(
             topic=metadata["topic"],
@@ -232,7 +247,12 @@ def step6_synthesize_field6(
             facts_text=facts_text,
             eurostat_text=eurostat_text,
         )),
-    ])
+    ]
+    try:
+        response = get_llm_synthesis().invoke(messages)
+    except Exception as e:
+        print(f"⚠️ Fallback (σφάλμα: {e})")
+        response = get_llm_fast().invoke(messages)
 
     text = extract_llm_content(response)
     word_count = len(text.split())
