@@ -44,6 +44,7 @@ class FeatureSettings(BaseSettings):
     field_4_openai_api_key: SecretStr | None = None
     field_29_openai_model: str | None = None
     field_29_openai_api_key: SecretStr | None = None
+    field_7_cache_dir: str | None = None
 
 
 class Settings:
