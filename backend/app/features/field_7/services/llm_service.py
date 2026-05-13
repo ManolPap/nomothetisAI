@@ -34,9 +34,11 @@ from app.features.field_7.schemas import (
 )
 from app.features.field_7.sdg_data import SDG_DATA
 
+from app.core.config import settings
+
 # Fallback όριο όταν αποτυγχάνει το step1_extract_metadata.
 LAW_TEXT_FALLBACK_LIMIT = 500
-CACHE_DIR = Path(__file__).parent.parent.parent.parent.parent / "cache" / "field7"
+CACHE_DIR = Path(settings.feature.field_7_cache_dir or "/tmp/nomothetis_cache/field7")
 
 
 def extract_llm_content(response: Any) -> str:
