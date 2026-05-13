@@ -171,6 +171,9 @@ def _call1_extract_summary(law_text: str) -> str:
     """
     print("\n--- ΚΛΗΣΗ 1: Εξαγωγή metadata νόμου (reuse field_6.step1) ---")
 
+    law_text = law_text[:20000]
+    print(f"  → Truncated law_text to {len(law_text)} χαρ.")
+
     metadata: dict | None = None
     try:
         metadata = step1_extract_metadata(law_text)
