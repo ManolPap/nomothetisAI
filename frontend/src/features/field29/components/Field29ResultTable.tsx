@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
-import type { Field29Row } from '../types'
+import type { Field29Row, LegacyField29Row } from '../types'
 
-interface Field29TableRow {
+interface LegacyTableRow {
   evaluatedProvision: string
   existingProvision: string
 }
@@ -15,7 +15,7 @@ function isSeparatorRow(row: string): boolean {
   return /^\|?\s*:?-{3,}:?\s*\|\s*:?-{3,}:?\s*\|?$/.test(row.trim())
 }
 
-function parseField29MarkdownTable(value: string): Field29TableRow[] {
+function parseLegacyMarkdownTable(value: string): LegacyTableRow[] {
   const lines = value.split(/\r?\n/).map((line) => line.trim()).filter(Boolean)
   const headerIndex = lines.findIndex(
     (line) =>
@@ -28,7 +28,7 @@ function parseField29MarkdownTable(value: string): Field29TableRow[] {
     return []
   }
 
-  const rows: Field29TableRow[] = []
+  const rows: LegacyTableRow[] = []
 
   for (const line of lines.slice(headerIndex + 1)) {
     if (!line.startsWith('|')) {
@@ -80,20 +80,44 @@ function renderCell(value: string) {
 }
 
 interface Props {
-  value: string
   rows?: Field29Row[]
+  legacyRows?: LegacyField29Row[]
+  fallbackText?: string
 }
 
-export function Field29ResultTable({ value, rows: structuredRows }: Props) {
-  const rows = structuredRows?.length
-    ? structuredRows.map((row) => ({
-        evaluatedProvision: row.evaluated_provision,
-        existingProvision: row.existing_provision,
-      }))
-    : parseField29MarkdownTable(value)
+export function Field29ResultTable({ rows: structuredRows, legacyRows, fallbackText }: Props) {
+  if (structuredRows?.length) {
+    return (
+      <div className="field29-table-wrap">
+        <table className="field29-table">
+          <thead>
+            <tr>
+              <th>Διατάξεις αξιολογούμενης ρύθμισης</th>
+              <th>Υφιστάμενες διατάξεις</th>
+            </tr>
+          </thead>
+          <tbody>
+            {structuredRows.map((row, index) => (
+              <tr key={`${row.source_article}-${index}`}>
+                <td>{renderCell(row.evaluated_provision)}</td>
+                <td>{renderCell(row.existing_provisions_text ?? '')}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )
+  }
 
-  if (rows.length === 0) {
-    return <pre className="field29-result__text">{value}</pre>
+  const legacyStructuredRows = legacyRows?.map((row) => ({
+    evaluatedProvision: row.evaluated_provision,
+    existingProvision: row.existing_provision,
+  }))
+  const legacyMarkdownRows = fallbackText ? parseLegacyMarkdownTable(fallbackText) : []
+  const fallbackRows = legacyStructuredRows?.length ? legacyStructuredRows : legacyMarkdownRows
+
+  if (fallbackRows.length === 0) {
+    return <pre className="field29-result__text">{fallbackText ?? ''}</pre>
   }
 
   return (
@@ -106,7 +130,7 @@ export function Field29ResultTable({ value, rows: structuredRows }: Props) {
           </tr>
         </thead>
         <tbody>
-          {rows.map((row, index) => (
+          {fallbackRows.map((row, index) => (
             <tr key={`${row.evaluatedProvision}-${index}`}>
               <td>{renderCell(row.evaluatedProvision)}</td>
               <td>{renderCell(row.existingProvision)}</td>

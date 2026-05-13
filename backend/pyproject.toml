@@ -39,9 +39,6 @@ target-version = "py313"
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
 
-[tool.ruff.lint.per-file-ignores]
-"app/features/field_29/prompt.py" = ["E501"]
-
 [tool.mypy]
 python_version = "3.13"
 pretty = true

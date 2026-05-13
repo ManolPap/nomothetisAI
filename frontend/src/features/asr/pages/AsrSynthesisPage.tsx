@@ -391,14 +391,19 @@ function Field23Section({ data }: { data: Field23Data }) {
 
 function Field29Section({ data }: { data: Field29Data }) {
   const { result } = data
+  const totalArticles = result.total_articles ?? result.articles_count ?? 0
   return (
     <div className="asr-section__body">
       <div className="field29-result__meta">
         <span>{result.filename}</span>
-        <span>{result.articles_count} άρθρα</span>
+        <span>{totalArticles} άρθρα</span>
         <span>{result.field_29_articles_count} σχετικά με το Πεδίο 29</span>
       </div>
-      <Field29ResultTable value={result.field_29_answer} rows={result.field_29_rows} />
+      <Field29ResultTable
+        rows={result.rows}
+        legacyRows={result.field_29_rows}
+        fallbackText={result.field_29_answer}
+      />
     </div>
   )
 }
