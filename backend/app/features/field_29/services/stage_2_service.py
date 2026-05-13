@@ -18,14 +18,19 @@ MISSING_EXISTING_PROVISION_TEXT = (
     "Δεν εντοπίστηκε στο διαθέσιμο corpus το κείμενο της υφιστάμενης διάταξης."
 )
 
+ADDITION_NO_EXISTING_TEXT = (
+    "Πρόκειται για νέα προσθήκη ή συμπλήρωση· "
+    "δεν υφίσταται υφιστάμενη διάταξη προς αντιπαραβολή."
+)
 
-def is_addition_only_change_type(change_type: str | None) -> bool:
-    """True when the row is classified as addition only (no prior provision in corpus)."""
+
+def is_no_prior_corpus_expected(change_type: str | None) -> bool:
+    """Προσθήκη/συμπλήρωση: δεν αναζητείται κείμενο υφιστάμενης διάταξης στο corpus."""
     if not change_type or not str(change_type).strip():
         return False
 
     labels = {part.strip() for part in str(change_type).split("/")}
-    return labels == {"addition"}
+    return labels in ({"addition"}, {"supplement"})
 
 
 class Field29RowWithExisting(Field29StageOneRow):
@@ -48,9 +53,6 @@ def split_reference_values(value: str | None) -> list[str]:
 def retrieve_chunks_for_affected_provision(
     affected_provision: AffectedProvision,
 ) -> list[CorpusChunk]:
-    if is_addition_only_change_type(affected_provision.get("change_type")):
-        return []
-
     law_number = normalize_law_number(affected_provision.get("law_number"))
     article = affected_provision.get("article")
     if not law_number or not article:
@@ -111,6 +113,12 @@ def format_existing_provision(chunks: list[CorpusChunk]) -> str:
 def resolve_affected_provision(
     affected_provision: AffectedProvision,
 ) -> ResolvedAffectedProvision:
+    if is_no_prior_corpus_expected(affected_provision.get("change_type")):
+        return {
+            "text": ADDITION_NO_EXISTING_TEXT,
+            "matched_chunks": [],
+        }
+
     chunks = retrieve_chunks_for_affected_provision(affected_provision)
     return {
         "text": format_existing_provision(chunks),
@@ -124,15 +132,23 @@ def build_existing_provisions_text(
     if not affected_provisions:
         return MISSING_EXISTING_PROVISION_TEXT, []
 
+    resolved_list = [resolve_affected_provision(p) for p in affected_provisions]
+    any_chunks = any(res["matched_chunks"] for res in resolved_list)
+
     text_parts: list[str] = []
     matched_chunks: list[CorpusChunk] = []
 
-    for affected_provision in affected_provisions:
-        resolved = resolve_affected_provision(affected_provision)
+    for resolved in resolved_list:
         text = resolved["text"]
+        matched_chunks.extend(resolved["matched_chunks"])
+
+        if text == MISSING_EXISTING_PROVISION_TEXT and any_chunks:
+            continue
         if text not in text_parts:
             text_parts.append(text)
-        matched_chunks.extend(resolved["matched_chunks"])
+
+    if not text_parts:
+        return MISSING_EXISTING_PROVISION_TEXT, dedupe_matched_chunks(matched_chunks)
 
     return "\n\n".join(text_parts).strip(), dedupe_matched_chunks(matched_chunks)
 
