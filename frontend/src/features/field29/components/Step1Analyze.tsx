@@ -45,6 +45,7 @@ export function Step1Analyze({ state, dispatch }: Props) {
   const isLoading = state.analyzeStatus === 'loading'
   const displayedFileName = state.file?.name ?? state.fileMeta?.name
   const canComplete = state.analyzeStatus === 'ready' && Boolean(state.result)
+  const totalArticles = state.result?.total_articles ?? state.result?.articles_count ?? 0
 
   return (
     <StepContainer
@@ -87,7 +88,7 @@ export function Step1Analyze({ state, dispatch }: Props) {
         <section className="field29-result" aria-live="polite">
           <div className="field29-result__meta">
             <span>{state.result.filename}</span>
-            <span>{state.result.articles_count} άρθρα</span>
+            <span>{totalArticles} άρθρα</span>
             <span>{state.result.field_29_articles_count} σχετικά με το Πεδίο 29</span>
           </div>
           {state.analyzeStatus === 'ready' && state.file && (
@@ -103,8 +104,9 @@ export function Step1Analyze({ state, dispatch }: Props) {
             </p>
           )}
           <Field29ResultTable
-            value={state.result.field_29_answer}
-            rows={state.result.field_29_rows}
+            rows={state.result.rows}
+            legacyRows={state.result.field_29_rows}
+            fallbackText={state.result.field_29_answer}
           />
         </section>
       )}
