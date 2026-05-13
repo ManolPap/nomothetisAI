@@ -7,6 +7,7 @@ import { EmptyState } from '../../../shared/ui/EmptyState'
 import { isApiError } from '../../../shared/api/errors'
 import { useLawFiles } from '../../../app/providers/LawFilesProvider'
 import { analyzeField4 } from '../api'
+import { Field4ResultTable } from './Field4ResultTable'
 import type { Field4Action, Field4State } from '../state/reducer'
 
 interface Props {
@@ -100,7 +101,7 @@ export function Step1Analyze({ state, dispatch }: Props) {
               </button>
             </p>
           )}
-          <pre className="field4-result__text">{state.result.field_4_answer}</pre>
+          <Field4ResultTable answer={state.result.field_4_answer} />
         </section>
       )}
 
