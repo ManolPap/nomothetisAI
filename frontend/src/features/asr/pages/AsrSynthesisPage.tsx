@@ -6,6 +6,7 @@ import { initialField23ReportDraft, type Field23ReportDraft, type Field23ReportP
 import type { AnalyzeField4Response } from '../../field4/types'
 import type { AnalyzeField29Response } from '../../field29/types'
 import type { AnalyzeField30Response } from '../../field30/types'
+import { Field4ResultTable } from '../../field4/components/Field4ResultTable'
 import { Field29ResultTable } from '../../field29/components/Field29ResultTable'
 import { Field30ResultTable } from '../../field30/components/Field30ResultTable'
 import { field4PersistEventName, readField4HomeMeta } from '../../field4/state/persist'
@@ -234,11 +235,7 @@ function Field4Section({ data }: { data: Field4Data }) {
   const { result } = data
   return (
     <div className="asr-section__body">
-      <div className="field4-result__meta">
-        <span>{result.filename}</span>
-        <span>{result.articles_count} άρθρα</span>
-      </div>
-      <pre className="field4-result__text">{result.field_4_answer}</pre>
+      <Field4ResultTable answer={result.field_4_answer} />
     </div>
   )
 }
@@ -609,30 +606,35 @@ export function AsrSynthesisPage() {
               </p>
             ) : (
               <div className="asr-chapter__fields">
-                {chapter.fields.map((f) => (
-                  <section key={f.slot} className="asr-field-block" aria-label={f.label}>
-                    {f.slot !== 'field23' || field23 == null ? (
-                      <header className="asr-field-block__header">
-                        <h3 className="asr-field-block__title">
-                          <span className="asr-field-block__code">{f.label}.</span>
-                          <span className="asr-field-block__title-text">
-                            {asrFieldHeadingText(f.description)}
-                          </span>
-                        </h3>
-                      </header>
-                    ) : null}
-                    <FieldSlotContent
-                      slot={f.slot}
-                      field4={field4}
-                      field6={field6}
-                      field7={field7}
-                      field9={field9}
-                      field23={field23}
-                      field29={field29}
-                      field30={field30}
-                    />
-                  </section>
-                ))}
+                {chapter.fields.map((f) => {
+                  const hideHeader =
+                    (f.slot === 'field23' && field23 != null) ||
+                    (f.slot === 'field4' && field4 != null)
+                  return (
+                    <section key={f.slot} className="asr-field-block" aria-label={f.label}>
+                      {!hideHeader ? (
+                        <header className="asr-field-block__header">
+                          <h3 className="asr-field-block__title">
+                            <span className="asr-field-block__code">{f.label}.</span>
+                            <span className="asr-field-block__title-text">
+                              {asrFieldHeadingText(f.description)}
+                            </span>
+                          </h3>
+                        </header>
+                      ) : null}
+                      <FieldSlotContent
+                        slot={f.slot}
+                        field4={field4}
+                        field6={field6}
+                        field7={field7}
+                        field9={field9}
+                        field23={field23}
+                        field29={field29}
+                        field30={field30}
+                      />
+                    </section>
+                  )
+                })}
               </div>
             )}
           </article>
