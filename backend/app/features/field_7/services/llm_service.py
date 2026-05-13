@@ -14,6 +14,7 @@ from typing import Any
 
 from langchain_core.messages import HumanMessage, SystemMessage
 
+from app.core.config import settings
 from app.features.field_6.prompt import METADATA_HUMAN_TEMPLATE, METADATA_SYSTEM
 from app.features.field_6.services.llm_service import (
     parse_extraction_fields,
@@ -33,8 +34,6 @@ from app.features.field_7.schemas import (
     SubtargetMatch,
 )
 from app.features.field_7.sdg_data import SDG_DATA
-
-from app.core.config import settings
 
 # Fallback όριο όταν αποτυγχάνει το step1_extract_metadata.
 LAW_TEXT_FALLBACK_LIMIT = 500
