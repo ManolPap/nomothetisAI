@@ -21,7 +21,7 @@ export const LawMetadataSchema = z.object({
 
 export const WebSearchPayloadSchema = z.object({
   metadata: LawMetadataSchema,
-  nim_text: z.string().min(1),
+  nim_text: z.string(),
 })
 
 export const EurostatPayloadSchema = z.object({
