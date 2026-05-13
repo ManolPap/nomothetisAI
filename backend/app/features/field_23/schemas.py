@@ -79,7 +79,7 @@ class AttributeLegislativeCommentsRequest(BaseModel):
         description=(
             "Προαιρετικό όνομα μοντέλου Gemini· default: env "
             "FEATURE_FIELD_23_COMMENT_ATTRIBUTION_MODEL "
-            "ή gemini-2.0-flash"
+            "(default στο backend: gemini-2.5-flash)"
         ),
     )
 

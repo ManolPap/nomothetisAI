@@ -24,7 +24,6 @@ from app.features.field_23.services.comments.attribution_prompts import (
 from app.features.field_23.services.comments.loader import load_stored_legislative_comments
 
 _MAX_ARTICLE_CHARS = 12_000
-_DEFAULT_MODEL = "gemini-2.0-flash"
 _SEM = asyncio.Semaphore(4)
 logger = logging.getLogger(__name__)
 
@@ -163,7 +162,11 @@ async def _attribute_single_item(
     if not comments:
         return ItemAttributionOut(item_index=item.item_index, contributions=[])
 
-    model_name = model or settings.feature.field_23_comment_attribution_model or _DEFAULT_MODEL
+    # JSON `model` overrides FEATURE_FIELD_23_COMMENT_ATTRIBUTION_MODEL when non-empty.
+    request_model = (model or "").strip()
+    model_name = (
+        request_model if request_model else settings.feature.field_23_comment_attribution_model
+    )
     llm = _chat_factory(model_name)
     structured = llm.with_structured_output(_LLMContributionsPayload)
 

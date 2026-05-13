@@ -208,7 +208,7 @@ const data: CompareLawsResponse = await res.json();
 | Field | Type | Constraints |
 |-------|------|----------------|
 | `items` | `ArticleChangeCommentsItem[]` | 1–30 items |
-| `model` | `string \| null` | Optional Gemini model name; default: `FIELD_23_COMMENT_ATTRIBUTION_MODEL` env or `gemini-2.0-flash` |
+| `model` | `string \| null` | Optional Gemini model name; default: `FEATURE_FIELD_23_COMMENT_ATTRIBUTION_MODEL` (backend default `gemini-2.5-flash`) |
 
 #### `ArticleChangeCommentsItem`
 

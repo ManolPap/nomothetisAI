@@ -20,7 +20,7 @@ class CachedEmbeddings:
     def __init__(
         self,
         *,
-        model: str = "models/gemini-embedding-2-preview",
+        model: str = "gemini-embedding-2",
         fallback_models: list[str] | None = None,
         api_key: str | None = None,
         namespace: str = "default",
@@ -28,7 +28,7 @@ class CachedEmbeddings:
         max_batch_size: int = 40,
         retry_attempts: int = 4,
     ) -> None:
-        self._models: list[str] = [model] + list(fallback_models or ["models/gemini-embedding-001"])
+        self._models: list[str] = [model] + list(fallback_models or ["gemini-embedding-001"])
         self._models = list(dict.fromkeys(self._models))
         self._active_model = self._models[0]
         self._api_key = (
