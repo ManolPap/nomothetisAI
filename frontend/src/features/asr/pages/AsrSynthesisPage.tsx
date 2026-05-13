@@ -606,14 +606,16 @@ export function AsrSynthesisPage() {
               <div className="asr-chapter__fields">
                 {chapter.fields.map((f) => (
                   <section key={f.slot} className="asr-field-block" aria-label={f.label}>
-                    <header className="asr-field-block__header">
-                      <h3 className="asr-field-block__title">
-                        <span className="asr-field-block__code">{f.label}.</span>
-                        <span className="asr-field-block__title-text">
-                          {asrFieldHeadingText(f.description)}
-                        </span>
-                      </h3>
-                    </header>
+                    {f.slot !== 'field23' || field23 == null ? (
+                      <header className="asr-field-block__header">
+                        <h3 className="asr-field-block__title">
+                          <span className="asr-field-block__code">{f.label}.</span>
+                          <span className="asr-field-block__title-text">
+                            {asrFieldHeadingText(f.description)}
+                          </span>
+                        </h3>
+                      </header>
+                    ) : null}
                     <FieldSlotContent
                       slot={f.slot}
                       field4={field4}
