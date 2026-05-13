@@ -10,6 +10,7 @@ from app.features.field_6.config import (
     EUROSTAT_CATALOG,
     TRUSTED_DOMAINS,
     get_llm_fast,
+    get_llm_synthesis,
     get_tavily,
 )
 from app.features.field_6.prompt import (
@@ -349,7 +350,7 @@ def select_eurostat_dataset_with_llm(metadata: dict) -> tuple | None:
         for i, (did, info) in enumerate(EUROSTAT_CATALOG.items())
     ])
 
-    response = get_llm_fast().invoke([
+    messages = [
         SystemMessage(content=EUROSTAT_DATASET_SYSTEM),
         HumanMessage(content=EUROSTAT_DATASET_HUMAN_TEMPLATE.format(
             topic=topic,
@@ -357,7 +358,12 @@ def select_eurostat_dataset_with_llm(metadata: dict) -> tuple | None:
             measures=measures,
             catalog_text=catalog_text,
         )),
-    ])
+    ]
+    try:
+        response = get_llm_synthesis().invoke(messages)
+    except Exception as e:
+        print(f"⚠️ Fallback (σφάλμα: {e})")
+        response = get_llm_fast().invoke(messages)
 
     choice = extract_llm_content(response).strip().split()[0]
     print(f"  LLM επέλεξε dataset: {choice}")
