@@ -28,7 +28,6 @@ from app.features.field_6.services.pdf_reader import (
     extract_text_from_pdf,
 )
 from app.features.field_6.services.web_search import (
-    step2_eurlex_nim,
     step4_web_search,
     step5b_eurostat_for_countries,
 )
@@ -64,11 +63,10 @@ async def extract_metadata(
 
     law_structured = extract_articles_from_law(full_text)
     metadata_dict = step1_extract_metadata(law_structured)
-    nim_text = step2_eurlex_nim(metadata_dict)
 
     return MetadataResponse(
         metadata=LawMetadata(**metadata_dict),
-        nim_text=nim_text,
+        nim_text="",
     )
 
 
@@ -85,7 +83,7 @@ async def web_search(body: WebSearchRequest) -> WebSearchResponse:
     metadata_dict = body.metadata.model_dump()
     queries = step3_generate_queries(metadata_dict)
     search_results = step4_web_search(queries)
-    facts, facts_text = step5_extract_facts(metadata_dict, search_results, nim_text=body.nim_text)
+    facts, facts_text = step5_extract_facts(metadata_dict, search_results, nim_text="")
 
     sources = [
         WebSource(
